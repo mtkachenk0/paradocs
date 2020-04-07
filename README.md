@@ -1,5 +1,6 @@
 # Paradocs: Extended [Parametric gem](https://github.com/ismasan/parametric) + Documentation Generation
 
+![Ruby](https://github.com/mtkachenk0/paradocs/workflows/Ruby/badge.svg)
 
 Declaratively define data schemas in your Ruby objects, and use them to whitelist, validate or transform inputs to your programs.
 
