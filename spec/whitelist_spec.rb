@@ -14,10 +14,7 @@ describe "classes including Whitelist module" do
         field(:empty_array).type(:array).schema do
           field(:id).whitelisted
         end
-        field(:subschema_1).whitelisted
-        subschema_by(:subschema_1) do |name|
-          name.to_sym
-        end
+        field(:subschema_1).whitelisted.mutates_schema! { |name, *| name.to_sym }
         field(:empty_hash).type(:array).schema do
           field(:id).whitelisted
         end
@@ -26,19 +23,16 @@ describe "classes including Whitelist module" do
           field(:name).present.type(:string)
           field(:empty_string).present.type(:string)
         end
-      end
-    end
 
-    subschema_for(:request, name: :subfield_1) do
-      field(:subfield_1).present.type(:boolean).whitelisted
-      field(:subschema_2)
-      subschema_by(:subschema_2) do |name|
-        name.to_sym
-      end
-    end
+        subschema(:subfield_1) do
+          field(:subfield_1).present.type(:boolean).whitelisted
+          field(:subschema_2).mutates_schema! { |name, *| name.to_sym }
 
-    subschema_for(:request, name: :subfield_2) do
-      field(:subfield_2).present.type(:boolean).whitelisted
+          subschema(:subfield_2) do
+            field(:subfield_2).present.type(:boolean).whitelisted
+          end
+        end
+      end
     end
   end
 

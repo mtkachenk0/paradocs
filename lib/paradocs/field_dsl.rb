@@ -24,5 +24,9 @@ module Paradocs
     def whitelisted
       policy :whitelisted
     end
+
+    def transparent
+      meta transparent: true
+    end
   end
 end
