@@ -36,11 +36,16 @@ module Paradocs
     def mutates_schema!(&block)
       @mutation_block   ||= block if block_given?
       @expects_mutation = @expects_mutation.nil? && true
+      meta mutates_schema: @mutation_block
       @mutation_block
     end
 
+    def mutates_schema?
+      !!@mutation_block
+    end
+
     def expects_mutation?
-      @mutation_block && @expects_mutation
+      mutates_schema? && @expects_mutation
     end
 
     def policy(key, *args)
@@ -57,6 +62,10 @@ module Paradocs
       sc = (sc ? sc : Schema.new(&block))
       meta schema: sc
       policy sc.schema
+    end
+
+    def transparent?
+      !!meta_data[:transparent]
     end
 
     def visit(meta_key = nil, &visitor)

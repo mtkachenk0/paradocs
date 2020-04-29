@@ -10,7 +10,6 @@ module Paradocs
       @options = options
       @fields = {}
       @subschemes = {}
-      @subschemes_identifiers = {}  # needed for #subschema_by
       @definitions = []
       @definitions << block if block_given?
       @default_field_policies = []
@@ -22,18 +21,23 @@ module Paradocs
       self
     end
 
+    def mutation_by!(key, &block)
+      f = @fields.keys.include?(key) ? @fields[key] : field(key).transparent
+      f.mutates_schema!(&block)
+    end
+
     def subschema(*args, &block)
-      ptions = args.last.is_a?(Hash) ? args.last : {}
-      name = args.first.is_a?(Symbol) ? args.shift : Paradocs::DSL::DEFAULT_SCHEMA_NAME
+      options = args.last.is_a?(Hash) ? args.last : {}
+      name = args.first.is_a?(Symbol) ? args.shift : Paradocs.config.default_schema_name
       current_schema = subschemes.fetch(name) { self.class.new }
       new_schema = if block_given?
-        sc = self.class.new
+        sc = self.class.new(options)
         sc.definitions << block
         sc
       elsif args.first.is_a?(self.class)
         args.first
       else
-        self.class.new
+        self.class.new(options)
       end
       subschemes[name] = current_schema.merge(new_schema)
     end
@@ -84,51 +88,51 @@ module Paradocs
       instance
     end
 
-    def structure(parent_subschemes=subschemes)
+    def structure(ignore_transparent: true)
+      flush!
       fields.each_with_object({_errors: [], _subschemes: {}}) do |(_, field), obj|
         meta = field.meta_data.dup
         sc = meta.delete(:schema)
+        meta[:mutates_schema] = true if meta.delete(:mutates_schema)
         if sc
-          meta[:structure] = sc.structure(parent_subschemes)
+          meta[:structure] = sc.structure(ignore_transparent: ignore_transparent)
           obj[:_errors] += meta[:structure].delete(:_errors)
         else
           obj[:_errors] += field.possible_errors
         end
-        obj[field.key] = meta
+        obj[field.key] = meta unless ignore_transparent && field.transparent?
 
-        next if @subschemes_identifiers.empty?
-        obj[:_identifiers] = @subschemes_identifiers.keys.first
-        if (obj[:_identifiers] - obj.keys).empty?
-          parent_subschemes.each do |name, subschema|
-            obj[:_subschemes][name] = subschema.structure
-            obj[:_errors] += obj[:_subschemes][name][:_errors]
-          end
+        next unless field.mutates_schema?
+        subschemes.each do |name, subschema|
+          obj[:_subschemes][name] = subschema.structure(ignore_transparent: ignore_transparent)
+          obj[:_errors] += obj[:_subschemes][name][:_errors]
         end
       end
     end
 
-    def flatten_structure(root="")
+    def flatten_structure(ignore_transparent: true, root: "", result:{})
       fields.each_with_object({_errors: [], _subschemes: {}}) do |(name, field), obj|
         json_path = root.empty? ? "$.#{name}" : "#{root}.#{name}"
         meta = field.meta_data.merge(json_path: json_path)
         sc = meta.delete(:schema)
+        meta[:mutates_schema] = true if meta.delete(:mutates_schema)
 
         humanize = Proc.new { |path| path.gsub("[]", "")[2..-1] }
-        obj[humanize.call(json_path)] = meta
+        obj[humanize.call(json_path)] = meta unless ignore_transparent && field.transparent?
+
         if sc
-          deep_result = sc.flatten_structure(json_path)
+          deep_result = sc.flatten_structure(ignore_transparent: ignore_transparent, root: json_path)
           obj[:_errors] += deep_result.delete(:_errors)
+          obj[:_subschemes].merge!(deep_result.delete(:_subschemes))
           obj.merge!(deep_result)
         else
           obj[:_errors] += field.possible_errors
         end
-
+        next unless field.mutates_schema?
         subschemes.each do |name, subschema|
-          obj[:_subschemes][name] = subschema.flatten_structure(json_path)
+          obj[:_subschemes][name] ||= subschema.flatten_structure(ignore_transparent: ignore_transparent, root: root)
           obj[:_errors] += obj[:_subschemes][name][:_errors]
         end
-        next if @subschemes_identifiers.empty?
-        obj[:_identifiers] = @subschemes_identifiers.keys.first.map { |id| "#{humanize.call(root)}.#{id}" }
       end
     end
 
@@ -144,10 +148,6 @@ module Paradocs
       else
         @fields[key] = apply_default_field_policies_to(f)
       end
-    end
-
-    def subschema_by(*keys, &block)
-      @subschemes_identifiers[keys] = block
     end
 
     def expand(exp, &block)
@@ -222,8 +222,6 @@ module Paradocs
       invoked_any = false
       # recoursive definitions call depending on payload
       flds.clone.each_pair do |_, field|
-        _, mutation_block = @subschemes_identifiers.detect { |ids, _| ids.include? field.key } # v1 compatibility
-        field.mutates_schema! &mutation_block if mutation_block
         next unless field.expects_mutation?
         subschema_name = field.subschema_for_mutation(payload, context.environment)
         subschema = subschemes[subschema_name] || context.subschema(subschema_name)
