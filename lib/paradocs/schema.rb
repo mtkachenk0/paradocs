@@ -110,7 +110,8 @@ module Paradocs
       end
     end
 
-    def flatten_structure(ignore_transparent: true, root: "", result:{})
+    def flatten_structure(ignore_transparent: true, root: "")
+      flush!
       fields.each_with_object({_errors: [], _subschemes: {}}) do |(name, field), obj|
         json_path = root.empty? ? "$.#{name}" : "#{root}.#{name}"
         meta = field.meta_data.merge(json_path: json_path)
