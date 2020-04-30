@@ -19,8 +19,9 @@ module Paradocs
 
   def self.config
     @config ||= OpenStruct.new(
-      explicit_errors:  false,
-      whitelisted_keys: []
+      explicit_errors:     false,
+      whitelisted_keys:    [],
+      default_schema_name: :schema
     )
   end
 

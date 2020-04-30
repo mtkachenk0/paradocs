@@ -15,27 +15,30 @@ describe "Schema structures generation" do
 
   let(:schema) do
     Paradocs::Schema.new do
+      subschema(:highest_level) { field(:test).present } # no mutations on this level -> subschema ignored
+
       field(:data).type(:object).present.schema do
         field(:id).type(:integer).present.policy(:policy_with_error)
         field(:name).type(:string).meta(label: "very important staff")
-        field(:role).type(:string).declared.options(["admin", "user"]).default("user")
+        field(:role).type(:string).declared.options(["admin", "user"]).default("user").mutates_schema! do |*|
+          :test_subschema
+        end
         field(:extra).type(:object).required.schema do
           field(:extra).declared.default(false).policy(:policy_with_silent_error)
         end
 
-        subschema_by(:role) { :subschema }
+        mutation_by!(:name) { :subschema }
+
+        subschema(:subschema) do
+          field(:test_field).present
+        end
+        subschema(:test_subschema) do
+          field(:test1).present
+        end
       end
     end
   end
-  let(:subschema1) do
-    Paradocs::Schema.new do
-      field(:test1).present
-    end
-  end
 
-  before do
-    schema.subschemes[:subschema] = subschema1
-  end
 
   it "generates nested data for documentation generation" do
     expect(schema.structure).to eq({
@@ -53,12 +56,14 @@ describe "Schema structures generation" do
           },
           name: {
             type: :string,
-            label: "very important staff"
+            label: "very important staff",
+            mutates_schema: true
           },
           role: {
             type: :string,
             options: ["admin", "user"],
-            default: "user"
+            default: "user",
+            mutates_schema: true
           },
           extra: {
             type: :object,
@@ -68,12 +73,16 @@ describe "Schema structures generation" do
               _subschemes: {}
             }
           },
-          _identifiers: [:role],
           _subschemes: {
-            subschema: {
+            test_subschema: {
               _errors: [],
               _subschemes: {},
               test1: {required: true, present: true}
+            },
+            subschema: {
+              _errors: [],
+              _subschemes: {},
+              test_field: {required: true, present: true}
             }
           }
         }
@@ -83,7 +92,6 @@ describe "Schema structures generation" do
   end
 
   it "generates flatten data for documentation generation" do
-    sisi = schema.structure
     expect(schema.flatten_structure).to eq({
       "data" => {
         type: :object,
@@ -110,18 +118,19 @@ describe "Schema structures generation" do
       "data.name" => {
         type: :string,
         json_path: "$.data.name",
-        label: "very important staff"
+        label: "very important staff",
+        mutates_schema: true
       },
       "data.role" => {
         type: :string,
         options: ["admin", "user"],
         default: "user",
-        json_path: "$.data.role"
+        json_path: "$.data.role",
+        mutates_schema: true
       },
       _errors: [ArgumentError],
-      _identifiers: ["data.role"],
       _subschemes: {
-        subschema: {
+        test_subschema: {
           _errors: [],
           _subschemes: {},
           "data.test1"=>{
@@ -129,6 +138,11 @@ describe "Schema structures generation" do
             present: true,
             json_path: "$.data.test1"
           }
+        },
+        subschema: {
+          _errors: [],
+          _subschemes: {},
+          "data.test_field" => {required: true, present: true, json_path: "$.data.test_field"}
         }
       }
     })

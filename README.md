@@ -1,5 +1,6 @@
 # Paradocs: Extended [Parametric gem](https://github.com/ismasan/parametric) + Documentation Generation
 
+![Ruby](https://github.com/mtkachenk0/paradocs/workflows/Ruby/badge.svg)
 
 Declaratively define data schemas in your Ruby objects, and use them to whitelist, validate or transform inputs to your programs.
 
@@ -97,20 +98,19 @@ results.errors # => {"$.friends[0].name" => "is required"}
 person_schema = Paradocs::Schema.new do
   field(:name).type(:string).required
   field(:age).type(:integer)
-  field(:role).type(:string).options(["admin", "user"])
-  subschema_by(:role) { |role| role == :admin ? :admin_schema : :user_schema }
+  field(:role).type(:string).options(["admin", "user"]).mutates_schema! do |value, key, payload, env| 
+    value == :admin ? :admin_schema : :user_schema 
+  end
+  
+  subschema(:admin_schema) do 
+    field(:permissions).present.type(:string).options(["superuser"])
+  end
+  subschema(:user_schema) do 
+    field(:permissions).present.type(:string).options(["readonly"])
+  end
 end
-admin_schema = Paradocs::Schema.new do
-  field(:permissions).present.type(:string).options(["superuser"])
-end
-user_schema = Paradocs::Schema.new do
-  field(:permissions).present.type(:string).options(["readonly"])
-end
-person_schema.subschemes = {
-    admin_schema: admin_schema,
-    user_schema: user_schema
-}
-# subschemes are resolved dynamically depending on the logic specified in #subschema_by
+
+# subschemes are resolved dynamically depending on the logic specified in #mutation_schema! block
 results = person_schema.resolve(name: "John", age: 20, role: :admin, permissions: "superuser")
 results.output # => {name: "John", age: 20, role: :admin, permissions: "superuser"}
 results = person_schema.resolve(name: "John", age: 20, role: :admin, permissions: "readonly")

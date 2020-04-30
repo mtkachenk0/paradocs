@@ -22,16 +22,15 @@ module Paradocs
     #
     #   foo.params # => {title: "A title", age: 20}
     #
-    DEFAULT_SCHEMA_NAME = :schema
 
     def self.included(base)
       base.extend(ClassMethods)
-      base.schemas = {DEFAULT_SCHEMA_NAME => Paradocs::Schema.new}
+      base.schemas = {Paradocs.config.default_schema_name => Paradocs::Schema.new}
     end
 
     module ClassMethods
       def schema=(sc)
-        @schemas[DEFAULT_SCHEMA_NAME] = sc
+        @schemas[Paradocs.config.default_schema_name] = sc
       end
 
       def schemas=(sc)
@@ -46,11 +45,11 @@ module Paradocs
 
       def schema(*args, &block)
         options = args.last.is_a?(Hash) ? args.last : {}
-        key = args.first.is_a?(Symbol) ? args.first : DEFAULT_SCHEMA_NAME
+        key = args.first.is_a?(Symbol) ? args.first : Paradocs.config.default_schema_name
         current_schema = @schemas.fetch(key) { Paradocs::Schema.new }
         new_schema = if block_given? || options.any?
           Paradocs::Schema.new(options, &block)
-        elsif args.first.respond_to?(:schema)
+        elsif args.first.is_a?(Paradocs::Schema)
           args.first
         end
 
@@ -59,12 +58,6 @@ module Paradocs
         @schemas[key] = current_schema ? current_schema.merge(new_schema) : new_schema
         paradocs_after_define_schema(@schemas[key])
         @schemas[key]
-      end
-
-      def subschema_for(main_schema, name:, **kwargs, &block)
-        subschema = schema(name, kwargs, &block)
-        @schemas[main_schema].subschemes[name] = subschema
-        subschema
       end
 
       def paradocs_after_define_schema(sc)

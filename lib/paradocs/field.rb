@@ -14,6 +14,8 @@ module Paradocs
       @default_block = nil
       @meta_data = {}
       @policies = []
+      @mutation_block = nil
+      @expects_mutation = nil
     end
 
     def meta(hash = nil)
@@ -31,12 +33,28 @@ module Paradocs
       self
     end
 
+    def mutates_schema!(&block)
+      @mutation_block   ||= block if block_given?
+      @expects_mutation = @expects_mutation.nil? && true
+      meta mutates_schema: @mutation_block
+      @mutation_block
+    end
+
+    def mutates_schema?
+      !!@mutation_block
+    end
+
+    def expects_mutation?
+      mutates_schema? && @expects_mutation
+    end
+
     def policy(key, *args)
       pol = lookup(key, args)
       meta pol.meta_data
       policies << pol
       self
     end
+
     alias_method :type, :policy
     alias_method :rule, :policy
 
@@ -46,6 +64,10 @@ module Paradocs
       policy sc.schema
     end
 
+    def transparent?
+      !!meta_data[:transparent]
+    end
+
     def visit(meta_key = nil, &visitor)
       if sc = meta_data[:schema]
         r = sc.visit(meta_key, &visitor)
@@ -53,6 +75,12 @@ module Paradocs
       else
         meta_key ? meta_data[meta_key] : yield(self)
       end
+    end
+
+    def subschema_for_mutation(payload, env)
+      subschema_name = @mutation_block.call(payload[key], key, payload, env) if @mutation_block
+      @expects_mutation = false
+      subschema_name
     end
 
     def resolve(payload, context)
