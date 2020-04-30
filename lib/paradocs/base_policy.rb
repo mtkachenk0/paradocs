@@ -50,7 +50,7 @@ module Paradocs
     end
 
     def self.policy_name
-      @policy_name
+      @policy_name || self.name.split("::").last.downcase.to_sym
     end
 
     attr_accessor :environment

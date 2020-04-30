@@ -19,6 +19,10 @@ describe 'custom block validator' do
     expect(schema.resolve(age: 40).errors.any?).to be true # name is missing
   end
 
+  before do
+    expect(Paradocs.registry.policies.values.map(&:policy_name)).to all(be)
+  end
+
   describe "error handling" do
     Paradocs.policy :strict_validation do
         register_error ArgumentError
