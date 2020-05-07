@@ -36,6 +36,10 @@ module Paradocs
     eligible do |value, key, payload|
       payload.key? key
     end
+
+    meta_data do
+      {}
+    end
   end
 
   Paradocs.policy :whitelisted do
@@ -79,24 +83,39 @@ module Paradocs
     end
   end
 
-  Paradocs.policy :gt do
-    message do |num, actual|
-      "must be greater than #{num}, but got #{actual}"
-    end
+  {
+    gte: [:>=, "greater than or equal to"],
+    lte: [:<=, "less than or equal to"],
+    gt:  [:>, "strictly greater than"],
+    lt:  [:<, "strictly less than"]
+  }.each do |policy, (comparison, text)|
+    klass = Class.new(Paradocs::BasePolicy) do
+      attr_reader :limit
+      define_method(:initialize) do |limit|
+        @limit = limit.is_a?(Proc) ? limit.call : limit
+      end
 
-    validate do |num, actual, key, payload|
-      !payload[key] || actual.to_i > num.to_i
-    end
-  end
+      define_method(:message) do
+        "value must be #{text} #{limit}"
+      end
 
-  Paradocs.policy :lt do
-    message do |num, actual|
-      "must be less than #{num}, but got #{actual}"
-    end
+      define_method(:validate) do |value, key, _|
+        @key, @value = key, value
+        value.send(comparison, limit)
+      end
 
-    validate do |num, actual, key, payload|
-      !payload[key] || actual.to_i < num.to_i
+      define_method(:meta_data) do
+        meta = super()
+        meta[policy][:limit] = limit
+        binding.pry unless meta.dig(policy, :limit)
+        meta
+      end
+
+      define_singleton_method(:policy_name) do
+        policy
+      end
     end
+    Paradocs.policy(policy, klass)
   end
 
   Paradocs.policy :options do

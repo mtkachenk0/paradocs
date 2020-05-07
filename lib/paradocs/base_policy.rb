@@ -34,10 +34,24 @@ module Paradocs
 
     %w(error silent_error).each do |name|
       getter = "#{name}s"
-      define_singleton_method(getter) { instance_variable_get("@#{getter}") || instance_variable_set("@#{getter}", []) }
+      define_singleton_method(getter) do
+        parent_errors = superclass.respond_to?(getter) ? superclass.send(getter) : []
+        parent_errors | (instance_variable_get("@#{getter}") || instance_variable_set("@#{getter}", []))
+      end
 
-      define_singleton_method("register_#{name}") do |*exceptions|
-        instance_variable_set("@#{getter}", ((self.public_send(getter) || []) + exceptions).uniq)
+      define_singleton_method("register_#{name}") do |*exceptions| # TODO: spec
+        # [Exception, as: :helper_method] or [Exception1, Exception2....]
+        only_errors = []
+        exceptions.each_with_index do |ex, index|
+          if ex.is_a? Hash
+            exception = exceptions[index - 1]
+            define_method(ex[:as]) { exception }
+            next
+          end
+          next unless ex.is_a?(Class) || ex < StandardError
+          only_errors << ex
+        end
+        instance_variable_set("@#{getter}", ((self.public_send(getter) || []) + only_errors).uniq)
       end
 
       define_method(getter) do
@@ -74,7 +88,8 @@ module Paradocs
     end
 
     def meta_data
-      meta.merge((self.class.meta_data || -> (*) { {} }).call(*init_params))
+      return self.class.meta_data.call(*init_params) if self.class.meta_data
+      meta
     end
 
     def validate(*args)
@@ -97,8 +112,8 @@ module Paradocs
 
     private
 
-    def meta #maybe call this guy instead of meta_data
-      @meta = errors.empty? ? {} : {self.class.policy_name => {errors: self.class.errors}}
+    def meta
+      @meta = {self.class.policy_name => {errors: self.class.errors}}
     end
 
     def init_params

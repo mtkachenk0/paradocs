@@ -41,7 +41,7 @@ describe "Schema structures generation" do
 
 
   it "generates nested data for documentation generation" do
-    expect(schema.structure).to eq({
+    expect(schema.structure { |k, meta| meta[:block_works] = true unless meta[:present] }).to eq({
       _subschemes: {},
       data: {
         type: :object,
@@ -57,19 +57,22 @@ describe "Schema structures generation" do
           name: {
             type: :string,
             label: "very important staff",
-            mutates_schema: true
+            mutates_schema: true,
+            block_works: true
           },
           role: {
             type: :string,
             options: ["admin", "user"],
             default: "user",
-            mutates_schema: true
+            mutates_schema: true,
+            block_works: true
           },
           extra: {
             type: :object,
             required: true,
+            block_works: true,
             structure: {
-              extra: {default: false},
+              extra: {default: false, block_works: true, policy_with_silent_error: {errors: []}},
               _subschemes: {}
             }
           },
@@ -77,7 +80,7 @@ describe "Schema structures generation" do
             test_subschema: {
               _errors: [],
               _subschemes: {},
-              test1: {required: true, present: true}
+              test1: {required: true, present: true }
             },
             subschema: {
               _errors: [],
@@ -92,11 +95,12 @@ describe "Schema structures generation" do
   end
 
   it "generates flatten data for documentation generation" do
-    expect(schema.flatten_structure).to eq({
+    expect(schema.flatten_structure { |key, meta| meta[:block_works] = true if key.split(".").size == 1 }).to eq({
       "data" => {
         type: :object,
         required: true,
         present: true,
+        block_works: true,
         json_path: "$.data"
       },
       "data.extra" => {
@@ -106,7 +110,8 @@ describe "Schema structures generation" do
       },
       "data.extra.extra" => {
         default: false,
-        json_path: "$.data.extra.extra"
+        json_path: "$.data.extra.extra",
+        policy_with_silent_error: {errors: []}
       },
       "data.id" => {
         type: :integer,

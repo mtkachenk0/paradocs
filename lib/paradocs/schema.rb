@@ -6,7 +6,7 @@ module Paradocs
   class Schema
     attr_accessor :environment
     attr_reader :subschemes
-    def initialize(options = {}, &block)
+    def initialize(options={}, &block)
       @options = options
       @fields = {}
       @subschemes = {}
@@ -88,29 +88,30 @@ module Paradocs
       instance
     end
 
-    def structure(ignore_transparent: true)
+    def structure(ignore_transparent: true, &block)
       flush!
       fields.each_with_object({_errors: [], _subschemes: {}}) do |(_, field), obj|
         meta = field.meta_data.dup
         sc = meta.delete(:schema)
         meta[:mutates_schema] = true if meta.delete(:mutates_schema)
         if sc
-          meta[:structure] = sc.structure(ignore_transparent: ignore_transparent)
+          meta[:structure] = sc.structure(ignore_transparent: ignore_transparent, &block)
           obj[:_errors] += meta[:structure].delete(:_errors)
         else
           obj[:_errors] += field.possible_errors
         end
         obj[field.key] = meta unless ignore_transparent && field.transparent?
+        yield(field.key, meta) if block_given?
 
         next unless field.mutates_schema?
         subschemes.each do |name, subschema|
-          obj[:_subschemes][name] = subschema.structure(ignore_transparent: ignore_transparent)
+          obj[:_subschemes][name] = subschema.structure(ignore_transparent: ignore_transparent, &block)
           obj[:_errors] += obj[:_subschemes][name][:_errors]
         end
       end
     end
 
-    def flatten_structure(ignore_transparent: true, root: "")
+    def flatten_structure(ignore_transparent: true, root: "", &block)
       flush!
       fields.each_with_object({_errors: [], _subschemes: {}}) do |(name, field), obj|
         json_path = root.empty? ? "$.#{name}" : "#{root}.#{name}"
@@ -118,20 +119,21 @@ module Paradocs
         sc = meta.delete(:schema)
         meta[:mutates_schema] = true if meta.delete(:mutates_schema)
 
-        humanize = Proc.new { |path| path.gsub("[]", "")[2..-1] }
-        obj[humanize.call(json_path)] = meta unless ignore_transparent && field.transparent?
+        humanized_name = json_path.gsub("[]", "")[2..-1]
+        obj[humanized_name] = meta unless ignore_transparent && field.transparent?
 
         if sc
-          deep_result = sc.flatten_structure(ignore_transparent: ignore_transparent, root: json_path)
+          deep_result = sc.flatten_structure(ignore_transparent: ignore_transparent, root: json_path, &block)
           obj[:_errors] += deep_result.delete(:_errors)
           obj[:_subschemes].merge!(deep_result.delete(:_subschemes))
           obj.merge!(deep_result)
         else
           obj[:_errors] += field.possible_errors
         end
+        yield(humanized_name, meta) if block_given?
         next unless field.mutates_schema?
         subschemes.each do |name, subschema|
-          obj[:_subschemes][name] ||= subschema.flatten_structure(ignore_transparent: ignore_transparent, root: root)
+          obj[:_subschemes][name] ||= subschema.flatten_structure(ignore_transparent: ignore_transparent, root: root, &block)
           obj[:_errors] += obj[:_subschemes][name][:_errors]
         end
       end
@@ -157,7 +159,6 @@ module Paradocs
     end
 
     def resolve(payload, environment={})
-      flush! unless subschemes.empty?
       @environment = environment
       context = Context.new(nil, Top.new, @environment, subschemes)
       output = coerce(payload, nil, context)
@@ -188,6 +189,7 @@ module Paradocs
     end
 
     def coerce(val, _, context)
+      flush!
       if val.is_a?(Array)
         val.map.with_index do |v, idx|
           subcontext = context.sub(idx)
@@ -209,7 +211,6 @@ module Paradocs
     attr_reader :default_field_policies, :ignored_field_keys, :expansions
 
     def coerce_one(val, context, flds: fields)
-      # subschemes v2
       invoke_subschemes!(val, context, flds: flds)
       flds.each_with_object({}) do |(_, field), m|
         r = field.resolve(val, context.sub(field.key))
