@@ -32,10 +32,11 @@ module Paradocs
 
       def resolve(payload, schema, context)
         filtered_payload = {}
-        schema.send(:invoke_subschemes!, payload, context)
         payload.dup.each do |key, value|
           key    = key.to_sym
           schema = Schema.new if schema.nil?
+          schema.send(:flush!)
+          schema.send(:invoke_subschemes!, payload, context)
 
           if value.is_a?(Hash)
             field_schema = find_schema_by(schema, key)

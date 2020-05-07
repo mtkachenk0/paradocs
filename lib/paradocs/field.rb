@@ -50,6 +50,7 @@ module Paradocs
 
     def policy(key, *args)
       pol = lookup(key, args)
+
       meta pol.meta_data
       policies << pol
       self

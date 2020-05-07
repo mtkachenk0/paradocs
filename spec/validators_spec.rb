@@ -52,26 +52,6 @@ describe 'default validators' do
     }
   end
 
-  describe ':gt' do
-    it {
-      test_validator({key: 10}, :key, :gt, true, true, 9)
-      test_validator({key: '10'}, :key, :gt, true, true, 9)
-      test_validator({key: 10}, :key, :gt, true, false, 11)
-      test_validator({key: '10'}, :key, :gt, true, false, 11)
-      test_validator({foo: '10'}, :key, :gt, true, true, 11)
-    }
-  end
-
-  describe ':lt' do
-    it {
-      test_validator({key: 10}, :key, :lt, true, true, 11)
-      test_validator({key: '10'}, :key, :lt, true, true, 11)
-      test_validator({key: 10}, :key, :lt, true, false, 9)
-      test_validator({key: '10'}, :key, :lt, true, false, 9)
-      test_validator({foo: '10'}, :key, :lt, true, true, 9)
-    }
-  end
-
   describe ':options' do
     it {
       test_validator({key: 'b'}, :key, :options, true, true, %w(a b c))
