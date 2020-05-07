@@ -5,8 +5,13 @@
 Declaratively define data schemas in your Ruby objects, and use them to whitelist, validate or transform inputs to your programs.
 
 Useful for building self-documeting APIs, search or form objects. Or possibly as an alternative to Rails' _strong parameters_ (it has no dependencies on Rails and can be used stand-alone).
+## Installation
 
-## Schema
+```rb
+gem 'paradocs', git: 'https://github.com/mtkachenk0/paradocs'
+```
+
+## Getting Started
 
 Define a schema
 
@@ -91,50 +96,6 @@ results = person_schema.resolve(
 )
 
 results.errors # => {"$.friends[0].name" => "is required"}
-```
-
-### Subschemas
-```ruby
-person_schema = Paradocs::Schema.new do
-  field(:name).type(:string).required
-  field(:age).type(:integer)
-  field(:role).type(:string).options(["admin", "user"]).mutates_schema! do |value, key, payload, env| 
-    value == :admin ? :admin_schema : :user_schema 
-  end
-  
-  subschema(:admin_schema) do 
-    field(:permissions).present.type(:string).options(["superuser"])
-  end
-  subschema(:user_schema) do 
-    field(:permissions).present.type(:string).options(["readonly"])
-  end
-end
-
-# subschemes are resolved dynamically depending on the logic specified in #mutation_schema! block
-results = person_schema.resolve(name: "John", age: 20, role: :admin, permissions: "superuser")
-results.output # => {name: "John", age: 20, role: :admin, permissions: "superuser"}
-results = person_schema.resolve(name: "John", age: 20, role: :admin, permissions: "readonly")
-results.errors => {"$.permissions"=>["must be one of superuser, but got readonly"]}
-```
-
-### Reusing nested schemas
-
-You can optionally use an existing schema instance as a nested schema:
-
-```ruby
-friends_schema = Paradocs::Schema.new do
-  field(:friends).type(:array).schema do
-    field(:name).type(:string).required
-    field(:email).policy(:email)
-  end
-end
-
-person_schema = Paradocs::Schema.new do
-  field(:name).type(:string).required
-  field(:age).type(:integer)
-  # Nest friends_schema
-  field(:friends).type(:array).schema(friends_schema)
-end
 ```
 
 ## Built-in policies
@@ -483,6 +444,51 @@ create_user_schema = Paradocs::Schema.new do
   end
 end
 ```
+
+### Subschemas
+```ruby
+person_schema = Paradocs::Schema.new do
+  field(:name).type(:string).required
+  field(:age).type(:integer)
+  field(:role).type(:string).options(["admin", "user"]).mutates_schema! do |value, key, payload, env| 
+    value == :admin ? :admin_schema : :user_schema 
+  end
+  
+  subschema(:admin_schema) do 
+    field(:permissions).present.type(:string).options(["superuser"])
+  end
+  subschema(:user_schema) do 
+    field(:permissions).present.type(:string).options(["readonly"])
+  end
+end
+
+# subschemes are resolved dynamically depending on the logic specified in #mutation_schema! block
+results = person_schema.resolve(name: "John", age: 20, role: :admin, permissions: "superuser")
+results.output # => {name: "John", age: 20, role: :admin, permissions: "superuser"}
+results = person_schema.resolve(name: "John", age: 20, role: :admin, permissions: "readonly")
+results.errors => {"$.permissions"=>["must be one of superuser, but got readonly"]}
+```
+
+### Reusing nested schemas
+
+You can optionally use an existing schema instance as a nested schema:
+
+```ruby
+friends_schema = Paradocs::Schema.new do
+  field(:friends).type(:array).schema do
+    field(:name).type(:string).required
+    field(:email).policy(:email)
+  end
+end
+
+person_schema = Paradocs::Schema.new do
+  field(:name).type(:string).required
+  field(:age).type(:integer)
+  # Nest friends_schema
+  field(:friends).type(:array).schema(friends_schema)
+end
+```
+
 ## Structures
 ### #structure
 
