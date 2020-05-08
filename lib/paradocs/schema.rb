@@ -118,7 +118,7 @@ module Paradocs
         meta = field.meta_data.merge(json_path: json_path)
         sc = meta.delete(:schema)
         meta[:mutates_schema] = true if meta.delete(:mutates_schema)
-
+        json_path << "[]" if meta[:type] == :array
         humanized_name = json_path.gsub("[]", "")[2..-1]
         obj[humanized_name] = meta unless ignore_transparent && field.transparent?
 

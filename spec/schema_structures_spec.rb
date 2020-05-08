@@ -23,7 +23,7 @@ describe "Schema structures generation" do
         field(:role).type(:string).declared.options(["admin", "user"]).default("user").mutates_schema! do |*|
           :test_subschema
         end
-        field(:extra).type(:object).required.schema do
+        field(:extra).type(:array).required.schema do
           field(:extra).declared.default(false).policy(:policy_with_silent_error)
         end
 
@@ -68,7 +68,7 @@ describe "Schema structures generation" do
             block_works: true
           },
           extra: {
-            type: :object,
+            type: :array,
             required: true,
             block_works: true,
             structure: {
@@ -104,13 +104,13 @@ describe "Schema structures generation" do
         json_path: "$.data"
       },
       "data.extra" => {
-        type: :object,
+        type: :array,
         required: true,
-        json_path: "$.data.extra"
+        json_path: "$.data.extra[]"
       },
       "data.extra.extra" => {
         default: false,
-        json_path: "$.data.extra.extra",
+        json_path: "$.data.extra[].extra",
         policy_with_silent_error: {errors: []}
       },
       "data.id" => {
