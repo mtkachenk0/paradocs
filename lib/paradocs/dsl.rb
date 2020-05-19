@@ -45,7 +45,7 @@ module Paradocs
 
       def schema(*args, &block)
         options = args.last.is_a?(Hash) ? args.last : {}
-        key = args.first.is_a?(Symbol) ? args.first : Paradocs.config.default_schema_name
+        key = args.first.is_a?(Symbol) ? args.shift : Paradocs.config.default_schema_name
         current_schema = @schemas.fetch(key) { Paradocs::Schema.new }
         new_schema = if block_given? || options.any?
           Paradocs::Schema.new(options, &block)
