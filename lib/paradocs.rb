@@ -21,7 +21,8 @@ module Paradocs
     @config ||= OpenStruct.new(
       explicit_errors:     false,
       whitelisted_keys:    [],
-      default_schema_name: :schema
+      default_schema_name: :schema,
+      meta_prefix:         "_"
     )
   end
 
