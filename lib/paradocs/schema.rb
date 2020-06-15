@@ -89,31 +89,33 @@ module Paradocs
     end
 
     def structure(ignore_transparent: true, &block)
+      meta_errors, meta_subschemes = %w(errors subschemes).map { |key| (Paradocs.config.meta_prefix + key).to_sym }
       flush!
-      fields.each_with_object({_errors: [], _subschemes: {}}) do |(_, field), obj|
+      fields.each_with_object({meta_errors => [], meta_subschemes => {}}) do |(_, field), obj|
         meta = field.meta_data.dup
         sc = meta.delete(:schema)
         meta[:mutates_schema] = true if meta.delete(:mutates_schema)
         if sc
           meta[:structure] = sc.structure(ignore_transparent: ignore_transparent, &block)
-          obj[:_errors] += meta[:structure].delete(:_errors)
+          obj[meta_errors] += meta[:structure].delete(meta_errors)
         else
-          obj[:_errors] += field.possible_errors
+          obj[meta_errors] += field.possible_errors
         end
         obj[field.key] = meta unless ignore_transparent && field.transparent?
         yield(field.key, meta) if block_given?
 
         next unless field.mutates_schema?
         subschemes.each do |name, subschema|
-          obj[:_subschemes][name] = subschema.structure(ignore_transparent: ignore_transparent, &block)
-          obj[:_errors] += obj[:_subschemes][name][:_errors]
+          obj[meta_subschemes][name] = subschema.structure(ignore_transparent: ignore_transparent, &block)
+          obj[meta_errors] += obj[meta_subschemes][name][meta_errors]
         end
       end
     end
 
     def flatten_structure(ignore_transparent: true, root: "", &block)
+      meta_errors, meta_subschemes = %w(errors subschemes).map { |key| (Paradocs.config.meta_prefix + key).to_sym }
       flush!
-      fields.each_with_object({_errors: [], _subschemes: {}}) do |(name, field), obj|
+      fields.each_with_object({meta_errors => [], meta_subschemes => {}}) do |(name, field), obj|
         json_path = root.empty? ? "$.#{name}" : "#{root}.#{name}"
         meta = field.meta_data.merge(json_path: json_path)
         sc = meta.delete(:schema)
@@ -124,17 +126,17 @@ module Paradocs
 
         if sc
           deep_result = sc.flatten_structure(ignore_transparent: ignore_transparent, root: json_path, &block)
-          obj[:_errors] += deep_result.delete(:_errors)
-          obj[:_subschemes].merge!(deep_result.delete(:_subschemes))
+          obj[meta_errors] += deep_result.delete(meta_errors)
+          obj[meta_subschemes].merge!(deep_result.delete(meta_subschemes))
           obj.merge!(deep_result)
         else
-          obj[:_errors] += field.possible_errors
+          obj[meta_errors] += field.possible_errors
         end
         yield(humanized_name, meta) if block_given?
         next unless field.mutates_schema?
         subschemes.each do |name, subschema|
-          obj[:_subschemes][name] ||= subschema.flatten_structure(ignore_transparent: ignore_transparent, root: root, &block)
-          obj[:_errors] += obj[:_subschemes][name][:_errors]
+          obj[meta_subschemes][name] ||= subschema.flatten_structure(ignore_transparent: ignore_transparent, root: root, &block)
+          obj[meta_errors] += obj[meta_subschemes][name][meta_errors]
         end
       end
     end
