@@ -1,13 +1,12 @@
 require "spec_helper"
 
 describe Paradocs::Field do
-  let(:registry) { Paradocs.registry }
   let(:context)  { Paradocs::Context.new }
 
-  subject { described_class.new(:a_key, registry) }
+  subject { described_class.new(:a_key) }
 
   def register_coercion(name, block)
-    registry.policy name do
+    Paradocs.registry.policy name do
       coerce &block
     end
   end
@@ -351,8 +350,8 @@ describe Paradocs::Field do
     end
 
     it 'chains policies' do
-      registry.policy :general, custom_klass.new("General")
-      registry.policy :commander, custom_klass.new("Commander")
+      Paradocs.registry.policy :general, custom_klass.new("General")
+      Paradocs.registry.policy :commander, custom_klass.new("Commander")
 
       subject
         .policy(:general)
@@ -366,7 +365,7 @@ describe Paradocs::Field do
     end
 
     it "can instantiate policy class and pass arguments" do
-      registry.policy :job_title, custom_klass
+      Paradocs.registry.policy :job_title, custom_klass
 
       subject.policy(:job_title, "Developer")
 
