@@ -1,9 +1,12 @@
 require "paradocs/context"
 require "paradocs/results"
 require "paradocs/field"
+require "paradocs/extensions/insides"
 
 module Paradocs
   class Schema
+    include Extensions::Insides
+
     attr_accessor :environment
     attr_reader :subschemes
     def initialize(options={}, &block)
@@ -88,59 +91,6 @@ module Paradocs
       instance
     end
 
-    def structure(ignore_transparent: true, &block)
-      meta_errors, meta_subschemes = %w(errors subschemes).map { |key| (Paradocs.config.meta_prefix + key).to_sym }
-      flush!
-      fields.each_with_object({meta_errors => [], meta_subschemes => {}}) do |(_, field), obj|
-        meta = field.meta_data.dup
-        sc = meta.delete(:schema)
-        meta[:mutates_schema] = true if meta.delete(:mutates_schema)
-        if sc
-          meta[:structure] = sc.structure(ignore_transparent: ignore_transparent, &block)
-          obj[meta_errors] += meta[:structure].delete(meta_errors)
-        else
-          obj[meta_errors] += field.possible_errors
-        end
-        obj[field.key] = meta unless ignore_transparent && field.transparent?
-        yield(field.key, meta) if block_given?
-
-        next unless field.mutates_schema?
-        subschemes.each do |name, subschema|
-          obj[meta_subschemes][name] = subschema.structure(ignore_transparent: ignore_transparent, &block)
-          obj[meta_errors] += obj[meta_subschemes][name][meta_errors]
-        end
-      end
-    end
-
-    def flatten_structure(ignore_transparent: true, root: "", &block)
-      meta_errors, meta_subschemes = %w(errors subschemes).map { |key| (Paradocs.config.meta_prefix + key).to_sym }
-      flush!
-      fields.each_with_object({meta_errors => [], meta_subschemes => {}}) do |(name, field), obj|
-        json_path = root.empty? ? "$.#{name}" : "#{root}.#{name}"
-        meta = field.meta_data.merge(json_path: json_path)
-        sc = meta.delete(:schema)
-        meta[:mutates_schema] = true if meta.delete(:mutates_schema)
-        json_path << "[]" if meta[:type] == :array
-        humanized_name = json_path.gsub("[]", "")[2..-1]
-        obj[humanized_name] = meta unless ignore_transparent && field.transparent?
-
-        if sc
-          deep_result = sc.flatten_structure(ignore_transparent: ignore_transparent, root: json_path, &block)
-          obj[meta_errors] += deep_result.delete(meta_errors)
-          obj[meta_subschemes].merge!(deep_result.delete(meta_subschemes))
-          obj.merge!(deep_result)
-        else
-          obj[meta_errors] += field.possible_errors
-        end
-        yield(humanized_name, meta) if block_given?
-        next unless field.mutates_schema?
-        subschemes.each do |name, subschema|
-          obj[meta_subschemes][name] ||= subschema.flatten_structure(ignore_transparent: ignore_transparent, root: root, &block)
-          obj[meta_errors] += obj[meta_subschemes][name][meta_errors]
-        end
-      end
-    end
-
     def field(field_or_key)
       f, key = if field_or_key.kind_of?(Field)
         [field_or_key, field_or_key.key]
@@ -164,12 +114,7 @@ module Paradocs
       @environment = environment
       context = Context.new(nil, Top.new, @environment, subschemes)
       output = coerce(payload, nil, context)
-      Results.new(output, context.errors)
-    end
-
-    def walk(meta_key = nil, &visitor)
-      r = visit(meta_key, &visitor)
-      Results.new(r, {})
+      Results.new(output, context.errors, @environment)
     end
 
     def eligible?(value, key, payload)
@@ -182,12 +127,6 @@ module Paradocs
 
     def meta_data
       {}
-    end
-
-    def visit(meta_key = nil, &visitor)
-      fields.each_with_object({}) do |(_, field), m|
-        m[field.key] = field.visit(meta_key, &visitor)
-      end
     end
 
     def coerce(val, _, context)
@@ -216,9 +155,7 @@ module Paradocs
       invoke_subschemes!(val, context, flds: flds)
       flds.each_with_object({}) do |(_, field), m|
         r = field.resolve(val, context.sub(field.key))
-        if r.eligible?
-          m[field.key] = r.value
-        end
+        m[field.key] = r.value if r.eligible?
       end
     end
 
@@ -246,12 +183,11 @@ module Paradocs
     def resolve_expansions(payload, into, context)
       expansions.each do |exp, block|
         payload.each do |key, value|
-          if match = exp.match(key.to_s)
-            fld = MatchContext.new.instance_exec(match, &block)
-            if fld
-              into.update(coerce_one({fld.key => value}, context, flds: {fld.key => apply_default_field_policies_to(fld)}))
-            end
-          end
+          match = exp.match(key.to_s)
+          next unless match
+          fld = MatchContext.new.instance_exec(match, &block)
+          next unless fld
+          into.update(coerce_one({fld.key => value}, context, flds: {fld.key => apply_default_field_policies_to(fld)}))
         end
       end
 

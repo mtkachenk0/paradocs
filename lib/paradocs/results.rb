@@ -1,9 +1,9 @@
 module Paradocs
   class Results
-    attr_reader :output, :errors
+    attr_reader :output, :errors, :environment
 
-    def initialize(output, errors)
-      @output, @errors = output, errors
+    def initialize(output, errors, environment)
+      @output, @errors, @environment = output, errors, environment
     end
 
     def valid?

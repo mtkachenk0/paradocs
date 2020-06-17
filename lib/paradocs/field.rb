@@ -7,10 +7,9 @@ module Paradocs
     attr_reader :key, :meta_data
     Result = Struct.new(:eligible?, :value)
 
-    def initialize(key, registry = Paradocs.registry)
+    def initialize(key)
       @key = key
       @policies = []
-      @registry = registry
       @default_block = nil
       @meta_data = {}
       @policies = []
@@ -117,7 +116,7 @@ module Paradocs
     end
 
     private
-    attr_reader :policies, :registry, :default_block
+    attr_reader :policies, :default_block
 
     def resolve_one(policy, value, payload, context)
       begin
@@ -144,7 +143,7 @@ module Paradocs
     end
 
     def lookup(key, args)
-      obj = key.is_a?(Symbol) ? registry.policies[key] : key
+      obj = key.is_a?(Symbol) ? Paradocs.registry.policies[key] : key
 
       raise ConfigurationError, "No policies defined for #{key.inspect}" unless obj
       obj.respond_to?(:new) ? obj.new(*args) : obj
