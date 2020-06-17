@@ -198,7 +198,6 @@ module Paradocs
       default_field_policies.reduce(field) {|f, policy_name| f.policy(policy_name) }
     end
 
-
     def apply!
       return if @applied
       definitions.each do |d|

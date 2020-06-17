@@ -63,8 +63,6 @@ module Paradocs
         end
       end
 
-      private
-
       def meta_keys
         %i(errors subschemes).map! { |key| [key, "#{Paradocs.config.meta_prefix}#{key}".to_sym] }.to_h
       end
