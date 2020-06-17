@@ -3,6 +3,50 @@ require "paradocs/schema"
 module Paradocs
   module Builders
     class Schema
+      class Identable
+        attr_reader :ident, :name
+        def initialize(name, ident="")
+          @name = name
+          @ident = ident
+        end
+        def inspect; "#{ident}#{name}"; end
+        def to_s; inspect; end
+      end
+
+      class Field < Identable
+        attr_accessor :presence, :type, :value
+        def initialize(key, value, ident)
+          @value = value
+          @presence = value.nil? || value.try(:empty?) || value.try(:zero?) ? :required : :present
+          @type = resolve_type
+          @schema = %i(array object).include?(type) ? ".schema do" : ""
+          super(key, ident)
+        end
+
+        def inspect
+          "#{@ident}field(:#{name}).#{presence}.type(:#{type})#{@schema}"
+        end
+
+        def nested?
+          !@schema.empty?
+        end
+
+        private
+
+        def resolve_type
+          type = value.class.name.downcase.to_sym
+          {
+            ->(v) { %i(string integer array).include?(type) } => type,
+            ->(v) { type == :hash }                           => :object,
+            ->(v) { type == :float }                          => :number,
+            ->(v) { !!v == v }                                => :boolean,
+            ->(v) { DateTime.parse(v.to_s).to_s == v.to_s }   => :datetime
+          }.detect { |rule, _| rule.call(value) }&.last || :string
+        rescue => ex
+          :string
+        end
+      end
+
       attr_reader :obj, :result
       def initialize(obj, spaces_in_tab=2)
         @obj = obj
@@ -13,9 +57,9 @@ module Paradocs
 
       def generate
         @result.clear
-        result << "Paradocs::Schema do"
+        result << Identable.new("Paradocs::Schema do")
         go_deeper(obj)
-        result << "end"
+        close_blocks!
         result
       end
 
@@ -23,24 +67,14 @@ module Paradocs
 
       def from_hash(hash)
         hash.each_pair do |key, value|
-          type = type_of(value)
-          field = "#{ident}field(:#{key}).#{presence_of(value)}.type(:#{type})"
-          if %i(array object).include? type
-            field << ".schema do"
-            result << field
-            go_deeper(value)
-            result << "#{ident}end"
-          else
-            result << field
-            next
-          end
+          field = Field.new(key, value, ident)
+          result << field
+          go_deeper(value) if field.nested?
         end
       end
 
       def from_array(array)
-        analyzing_array(array) do |hash|
-          from_hash(hash)
-        end
+        analyzing_array(array) { |hash| from_hash(hash) }
       end
 
       def go_deeper(obj)
@@ -54,22 +88,15 @@ module Paradocs
         " " * @deep_level * @spaces_in_tab
       end
 
-      def presence_of(value)
-        return :required if value.nil? || value.try(:empty?) || value.try(:zero?)
-        :present
-      end
-
-      def type_of(value)
-        type = value.class.name.downcase.to_sym
-        {
-          ->(v) { %i(string integer array).include?(type) } => type,
-          ->(v) { type == :hash }                           => :object,
-          ->(v) { type == :float }                          => :number,
-          ->(v) { !!v == v }                                => :boolean,
-          ->(v) { DateTime.parse(v.to_s).to_s == v.to_s }   => :datetime
-        }.detect { |rule, _| rule.call(value) }&.last || :string
-      rescue
-        :string
+      def close_blocks!
+        memo = result.clone
+        memo.each_with_index do |field, index|
+          next unless field.try(:nested?)
+          blok = result.slice(result.index(field) + 1..-1)
+          end_before_field = blok.detect { |f| f.ident <= field.ident }
+          field_index = result.index(end_before_field) || result.index(memo[-1]) + 1
+          result.insert(field_index, Identable.new("end", field.ident))
+        end
       end
 
       def analyzing_array(array, &block)
@@ -78,29 +105,19 @@ module Paradocs
         array.each { |hash| yield(hash) }
         array_size = array.size
 
-        grouped_result = @result.group_by do |name|
-          name.match(/(\s*field\(:.+\)\.)(present|required|declared)./).try(:[], 1).to_s
-        end
-        grouped_result.each_with_index do |(field, duplicates), index|
-          next if field.empty?
-          field = field.dup
-          # define presence of the field
-          field << if duplicates.size != array.size
-            "declared"
+        @result.group_by { |field| [field.name, field.ident] }.each do |field, duplicates|
+          adjusted_field = duplicates.first
+          adjusted_field.presence = if duplicates.size != array.size
+            :declared
           else
-            presence = duplicates.map { |field| field.match(/field\(:.+\).(\w+)\./)[1] }.uniq
+            presence = duplicates.map(&:presence).uniq
             presence.size == 1 ? presence.first : presence.sort.last # [present, required] => required
           end
 
-          types = duplicates.map { |f| f.match(/\.type\(:(\w+)\)/)[1] }.uniq
-          field << ".type(:#{types.size == 1 ? types.first : "string"})" # set string if the same fields have different types
-          field << ".schema do" if duplicates.any? { |x| x.match? /\.schema do/ }
-          result_was << field
-
-          # possible_end = @result[@result.index { |el| el.include?(field) } + 1]
-          # result_was << possible_end if possible_end.match? /\send/
+          types = duplicates.map(&:type).uniq
+          adjusted_field.type = types.size == 1 ? types.first : :string
+          result_was << adjusted_field
         end
-        binding.pry
         @result = result_was
       end
     end
