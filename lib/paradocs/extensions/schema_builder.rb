@@ -1,30 +1,34 @@
-require "paradocs/schema"
-
 module Paradocs
-  module Builders
-    class Schema
-      class Identable
-        attr_reader :ident, :name
-        def initialize(name, ident="")
-          @name = name
-          @ident = ident
-        end
-        def inspect; "#{ident}#{name}"; end
-        def to_s; inspect; end
-      end
-
-      class Field < Identable
-        attr_accessor :presence, :type, :value
-        def initialize(key, value, ident)
-          @value = value
-          @presence = value.nil? || value.try(:empty?) || value.try(:zero?) ? :required : :present
-          @type = resolve_type
-          @schema = %i(array object).include?(type) ? ".schema do" : ""
-          super(key, ident)
+  module Extensions
+    class SchemaBuilder
+      class Indentable
+        attr_reader :indent, :name
+        def initialize(name, indent="")
+          @name  = name
+          @indent = indent
         end
 
         def inspect
-          "#{@ident}field(:#{name}).#{presence}.type(:#{type})#{@schema}"
+          "#{indent}#{name}"
+        end
+
+        def to_s
+          inspect
+        end
+      end
+
+      class Field < Indentable
+        attr_accessor :presence, :type, :value
+        def initialize(key, value, indent)
+          @value    = value
+          @presence = value.nil? || value.try(:empty?) || value.try(:zero?) ? :required : :present
+          @type     = resolve_type
+          @schema   = %i(array object).include?(type) ? ".schema do" : ""
+          super(key, indent)
+        end
+
+        def inspect
+          "#{@indent}field(:#{name}).#{presence}.type(:#{type})#{@schema}"
         end
 
         def nested?
@@ -49,15 +53,13 @@ module Paradocs
 
       attr_reader :obj, :result
       def initialize(obj, spaces_in_tab=2)
-        @obj = obj
-        @spaces_in_tab = spaces_in_tab
-        @deep_level = 0
-        @result = []
+        @obj, @spaces_in_tab = obj, spaces_in_tab
+        @deep_level, @result = 0, []
       end
 
       def generate
         @result.clear
-        result << Identable.new("Paradocs::Schema do")
+        result << Indentable.new("Paradocs::Schema do")
         go_deeper(obj)
         close_blocks!
         result
@@ -67,7 +69,7 @@ module Paradocs
 
       def from_hash(hash)
         hash.each_pair do |key, value|
-          field = Field.new(key, value, ident)
+          field = Field.new(key, value, indent)
           result << field
           go_deeper(value) if field.nested?
         end
@@ -84,7 +86,7 @@ module Paradocs
         @deep_level -= 1
       end
 
-      def ident
+      def indent
         " " * @deep_level * @spaces_in_tab
       end
 
@@ -92,10 +94,10 @@ module Paradocs
         memo = result.clone
         memo.each_with_index do |field, index|
           next unless field.try(:nested?)
-          blok = result.slice(result.index(field) + 1..-1)
-          end_before_field = blok.detect { |f| f.ident <= field.ident }
+          block = result.slice(result.index(field) + 1..-1) # get fields after `schema do`
+          end_before_field = block.detect { |f| f.indent <= field.indent } # get fields that are inside block
           field_index = result.index(end_before_field) || result.index(memo[-1]) + 1
-          result.insert(field_index, Identable.new("end", field.ident))
+          result.insert(field_index, Indentable.new("end", field.indent))
         end
       end
 
@@ -105,7 +107,7 @@ module Paradocs
         array.each { |hash| yield(hash) }
         array_size = array.size
 
-        @result.group_by { |field| [field.name, field.ident] }.each do |field, duplicates|
+        @result.group_by { |field| [field.name, field.indent] }.each do |field, duplicates|
           adjusted_field = duplicates.first
           adjusted_field.presence = if duplicates.size != array.size
             :declared
