@@ -232,9 +232,11 @@ Specify value's length constraints
 
 ```ruby
 field(:name).length(min: 5, max: 25)
+field(:name).length(eq: 10)
 
 # Same as
 field(:name).policy(:length, [{min: 5, max: 25}])
+field(:name).policy(:length, [{eq: 10}])
 ```
 
 ### :split
