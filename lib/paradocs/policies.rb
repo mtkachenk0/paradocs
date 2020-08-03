@@ -157,6 +157,10 @@ module Paradocs
       !payload.key?(key) || ok?(options, actual)
     end
 
+    meta_data do |opts|
+      {length: opts}
+    end
+
     def ok?(options, actual)
       options.all? do |comparison, limit|
         actual.to_s.length.send(COMPARISONS[comparison].first, limit)
