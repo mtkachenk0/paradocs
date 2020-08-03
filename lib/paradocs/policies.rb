@@ -142,8 +142,9 @@ module Paradocs
 
   Paradocs.policy :length do
     COMPARISONS = {
-      max: [:>, "maximum"],
-      min: [:<, "minimum"]
+      max: [:<=, "maximum"],
+      min: [:>=, "minimum"],
+      eq:  [:==, "exactly"]
     }.freeze
 
     message do |options, actual, key|
@@ -157,7 +158,7 @@ module Paradocs
     end
 
     def ok?(options, actual)
-      options.select do |comparison, limit|
+      options.reject do |comparison, limit|
         actual.to_s.length.send(COMPARISONS[comparison].first, limit)
       end.empty?
     end
