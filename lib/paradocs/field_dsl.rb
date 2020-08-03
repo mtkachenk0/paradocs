@@ -28,5 +28,9 @@ module Paradocs
     def transparent
       meta transparent: true
     end
+
+    def length(opts)
+      policy :length, opts
+    end
   end
 end

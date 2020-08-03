@@ -119,4 +119,41 @@ describe 'default coercions' do
       expected_policy_behavior(policy: :lte, policy_args: [1], input: {a: 40}, output: {a: 40}, errors: errors)
     end
   end
+
+  describe ':length' do
+    it "passes the value if it's between min and max limits" do
+      expected_policy_behavior(policy: :length, policy_args: [{min: 5, max: 20}], input: {a: "string"}, output: {a: "string"})
+      expected_policy_behavior(policy: :length, policy_args: [{min: 5}], input: {a: "string"}, output: {a: "string"})
+      expected_policy_behavior(policy: :length, policy_args: [{max: 20}], input: {a: "string"}, output: {a: "string"})
+    end
+
+    it "passes the value if it's exactly :eq limit" do
+      expected_policy_behavior(policy: :length, policy_args: [{eq: 5}], input: {a: "12345"}, output: {a: "12345"})
+    end
+
+    it "raises error if value is not exactly than defined :eq limit" do
+      errors = {"$.a"=>["value must be exactly 10 characters"]}
+      expected_policy_behavior(policy: :length, policy_args: [{eq: 10}], input: {a: "test"}, output: {a: "test"}, errors: errors)
+    end
+
+    it "raises error if value is less than min limit" do
+      errors = {"$.a"=>["value must be minimum 10 characters"]}
+      expected_policy_behavior(policy: :length, policy_args: [{min: 10}], input: {a: "test"}, output: {a: "test"}, errors: errors)
+    end
+
+    it "raises error if value is greater than max limit" do
+      errors = {"$.a"=>["value must be maximum 3 characters"]}
+      expected_policy_behavior(policy: :length, policy_args: [{max: 3}], input: {a: "test"}, output: {a: "test"}, errors: errors)
+    end
+
+    it "raises error with full description if value is less than min limit" do
+      errors = {"$.a"=>["value must be minimum 10 characters, maximum 20 characters"]}
+      expected_policy_behavior(policy: :length, policy_args: [{min: 10, max: 20}], input: {a: "test"}, output: {a: "test"}, errors: errors)
+    end
+
+    it "raises error with full description if value is greater than max limit" do
+      errors = {"$.a"=>["value must be minimum 3 characters, maximum 5 characters"]}
+      expected_policy_behavior(policy: :length, policy_args: [{min: 3, max: 5}], input: {a: "test_test"}, output: {a: "test_test"}, errors: errors)
+    end
+  end
 end

@@ -139,4 +139,28 @@ module Paradocs
       [actual].flatten.all?{|v| options.include?(v)}
     end
   end
+
+  Paradocs.policy :length do
+    COMPARISONS = {
+      max: [:<=, "maximum"],
+      min: [:>=, "minimum"],
+      eq:  [:==, "exactly"]
+    }.freeze
+
+    message do |options, actual, key|
+      "value must be " + options.each_with_object([]) do |(comparison, limit), obj|
+        obj << "#{COMPARISONS[comparison].last} #{limit} characters"
+      end.join(", ")
+    end
+
+    validate do |options, actual, key, payload|
+      !payload.key?(key) || ok?(options, actual)
+    end
+
+    def ok?(options, actual)
+      options.all? do |comparison, limit|
+        actual.to_s.length.send(COMPARISONS[comparison].first, limit)
+      end
+    end
+  end
 end
