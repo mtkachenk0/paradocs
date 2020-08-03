@@ -229,7 +229,7 @@ field(:status).policy(:options, ["draft", "published"])
 Specify value's length constraints
  - `min:` - The attribute cannot have less than the specified length.
  - `max`  - The attribute cannot have more than the specified length.
-
+ - `eq`   - The attribute should be exactly than the specified length.
 ```ruby
 field(:name).length(min: 5, max: 25)
 field(:name).length(eq: 10)
