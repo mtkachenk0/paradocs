@@ -158,9 +158,9 @@ module Paradocs
     end
 
     def ok?(options, actual)
-      options.reject do |comparison, limit|
+      options.all? do |comparison, limit|
         actual.to_s.length.send(COMPARISONS[comparison].first, limit)
-      end.empty?
+      end
     end
   end
 end
