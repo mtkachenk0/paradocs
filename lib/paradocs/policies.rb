@@ -158,7 +158,7 @@ module Paradocs
     end
 
     meta_data do |opts|
-      {options: opts}
+      {length: opts}
     end
 
     def ok?(options, actual)
