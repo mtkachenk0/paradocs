@@ -224,6 +224,19 @@ field(:status).options(["draft", "published"])
 field(:status).policy(:options, ["draft", "published"])
 ```
 
+### :length
+
+Specify value's length constraints
+ - `min:` - The attribute cannot have less than the specified length.
+ - `max`  - The attribute cannot have more than the specified length.
+
+```ruby
+field(:name).length(min: 5, max: 25)
+
+# Same as
+field(:name).policy(:length, [{min: 5, max: 25}])
+```
+
 ### :split
 
 Split comma-separated string values into an array.
@@ -452,15 +465,15 @@ Sometimes depending on the data the structure may vary. Most frequently used opt
 - Subschemas are conditional schemas declared inside schemas. They doesn't exist until mutation block is called and decides to invoke a subschema.
 ```ruby
 person_schema = Paradocs::Schema.new do
-  field(:role).type(:string).options(["admin", "user"]).mutates_schema! do |value, key, payload, env| 
-    value == :admin ? :admin_schema : :user_schema 
+  field(:role).type(:string).options(["admin", "user"]).mutates_schema! do |value, key, payload, env|
+    value == :admin ? :admin_schema : :user_schema
   end
-  
-  subschema(:admin_schema) do 
+
+  subschema(:admin_schema) do
     field(:permissions).present.type(:string).options(["superuser"])
     field(:admin_field)
   end
-  subschema(:user_schema) do 
+  subschema(:user_schema) do
     field(:permissions).present.type(:string).options(["readonly"])
     field(:user_field)
   end
