@@ -41,56 +41,70 @@ describe "Schema structures generation" do
 
 
   it "generates nested data for documentation generation" do
-    expect(schema.structure { |k, meta| meta[:block_works] = true unless meta[:present] }).to eq({
-      _subschemes: {},
-      data: {
-        type: :object,
-        required: true,
-        present: true,
-        structure: {
-          id: {
-            type: :integer,
-            required: true,
-            present: true,
-            policy_with_error: {errors: [ArgumentError]}
-          },
-          name: {
-            type: :string,
-            label: "very important staff",
-            mutates_schema: true,
-            block_works: true
-          },
-          role: {
-            type: :string,
-            options: ["admin", "user"],
-            default: "user",
-            mutates_schema: true,
-            block_works: true
-          },
-          extra: {
-            type: :array,
-            required: true,
-            block_works: true,
-            structure: {
-              extra: {default: false, block_works: true, policy_with_silent_error: {errors: []}},
-              _subschemes: {}
-            }
-          },
-          _subschemes: {
-            test_subschema: {
-              _errors: [],
-              _subschemes: {},
-              test1: {required: true, present: true }
-            },
-            subschema: {
-              _errors: [],
-              _subschemes: {},
-              test_field: {required: true, present: true}
-            }
-          }
-        }
+    result = schema.structure { |k, meta| meta[:block_works] = true unless meta[:present] }
+    expect(result[:_subschemes]).to eq({})
+    expect(result[:_errors]).to eq([ArgumentError])
+    data_structure = result[:data].delete(:structure)
+    expect(result[:data]).to eq({
+      type: :object,
+      required: true,
+      present: true,
+      json_path: "$.data",
+      nested_name: "data",
+    })
+    expect(data_structure[:_subschemes]).to eq({
+      test_subschema: {
+        _errors: [],
+        _subschemes: {},
+        test1: {required: true, present: true, json_path: "$.data.test1", nested_name: "data.test1"}
       },
-      _errors: [ArgumentError]
+      subschema: {
+        _errors: [],
+        _subschemes: {},
+        test_field: {required: true, present: true, json_path: "$.data.test_field", nested_name: "data.test_field"}
+      }
+    })
+    expect(data_structure[:id]).to eq({
+      type: :integer,
+      required: true,
+      present: true,
+      policy_with_error: {errors: [ArgumentError]},
+      json_path: "$.data.id",
+      nested_name: "data.id"
+    })
+    expect(data_structure[:name]).to eq({
+      type: :string,
+      label: "very important staff",
+      mutates_schema: true,
+      block_works: true,
+      json_path: "$.data.name",
+      nested_name: "data.name"
+    })
+    expect(data_structure[:role]).to eq({
+      type: :string,
+      options: ["admin", "user"],
+      default: "user",
+      mutates_schema: true,
+      block_works: true,
+      json_path: "$.data.role",
+      nested_name: "data.role"
+    })
+    expect(data_structure[:extra]).to eq({
+      type: :array,
+      required: true,
+      block_works: true,
+      json_path: "$.data.extra[]",
+      nested_name: "data.extra",
+      structure: {
+        extra: {
+          default: false,
+          block_works: true,
+          json_path: "$.data.extra[].extra",
+          nested_name: "data.extra.extra",
+          policy_with_silent_error: {errors: []}
+        },
+        _subschemes: {}
+      }
     })
   end
 
