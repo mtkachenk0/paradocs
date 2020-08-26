@@ -64,8 +64,8 @@ describe "schemes with subschemes" do
       structure = {
         _errors: [],
         _subschemes: {
-          fail:    {_errors: [], _subschemes: {}, fail_field: {required: true, present: true}},
-          success: {_errors: [], _subschemes: {}, success_field: {required: true, present: true}}
+          fail:    {_errors: [], _subschemes: {}, fail_field: {required: true, present: true, json_path: "$.fail_field", nested_name: "fail_field"}},
+          success: {_errors: [], _subschemes: {}, success_field: {required: true, present: true, json_path: "$.success_field", nested_name: "success_field"}}
         }
       }
       result = schema.resolve({error: :here})
@@ -73,7 +73,7 @@ describe "schemes with subschemes" do
       expect(result.output).to    eq({error: :here, fail_field: nil})
       expect(schema.structure).to eq(structure)
       expect(schema.structure(ignore_transparent: false)).to eq(structure.merge(
-        error: {transparent: true, mutates_schema: true}
+        error: {transparent: true, mutates_schema: true, json_path: "$.error", nested_name: "error"}
       ))
 
       result = schema.resolve({})
@@ -81,7 +81,7 @@ describe "schemes with subschemes" do
       expect(result.output).to eq({success_field: nil})
       expect(schema.structure).to eq(structure)
       expect(schema.structure(ignore_transparent: false)).to eq(structure.merge(
-        error: {transparent: true, mutates_schema: true}
+        error: {transparent: true, mutates_schema: true, json_path: "$.error", nested_name: "error"}
       ))
     end
   end
