@@ -8,9 +8,9 @@ Gem::Specification.new do |spec|
   spec.version       = Paradocs::VERSION
   spec.authors       = ["Ismael Celis", "Maxim Tkachenko"]
   spec.email         = ["ismaelct@gmail.com", "tkachenko.maxim.w@gmail.com"]
-  spec.summary       = %q{Flexible DSL for declaring allowed parameters focused on DRY validation and docs generation.}
-  spec.description   = %q{A huge add-on for original gem mostly focused on retrieving the more metadata from declared schemas as possible.}
-  spec.homepage      = ""
+  spec.description   = %q{Flexible DSL for declaring allowed parameters focused on DRY validation that gives you opportunity to generate API documentation on-the-fly.}
+  spec.summary       = %q{A huge add-on for original gem mostly focused on retrieving the more metadata from declared schemas as possible.}
+  spec.homepage      = "https://github.com/mtkachenk0/paradocs"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "bundler", "~> 2.1"
-  spec.add_development_dependency "rake"
+  spec.add_development_dependency "rake", "~> 0"
   spec.add_development_dependency "rspec", '3.4.0'
-  spec.add_development_dependency "pry"
+  spec.add_development_dependency "pry", "~> 0"
 end
