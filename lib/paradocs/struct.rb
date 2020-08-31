@@ -18,8 +18,8 @@ module Paradocs
       base.extend ClassMethods
     end
 
-    def initialize(attrs = {})
-      @_results = self.class.schema.resolve(attrs)
+    def initialize(attrs = {}, environment = {})
+      @_results = self.class.schema.resolve(attrs, environment)
       @_graph = self.class.build(@_results.output)
     end
 
@@ -48,8 +48,8 @@ module Paradocs
     attr_reader :_graph, :_results
 
     module ClassMethods
-      def new!(attrs = {})
-        st = new(attrs)
+      def new!(attrs = {}, environment = {})
+        st = new(attrs, environment)
         raise InvalidStructError.new(st) unless st.valid?
         st
       end

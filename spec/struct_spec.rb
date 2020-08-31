@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'paradocs/struct'
 
 describe Paradocs::Struct do
-  it "works" do
+  it 'works' do
     friend_class = Class.new do
       include Paradocs::Struct
 
@@ -53,7 +53,7 @@ describe Paradocs::Struct do
     expect(invalid_instance.friends[1].errors['$.name']).not_to be_nil
   end
 
-  it "is inmutable by default" do
+  it 'is inmutable by default' do
     klass = Class.new do
       include Paradocs::Struct
 
@@ -66,7 +66,7 @@ describe Paradocs::Struct do
 
     instance = klass.new
     expect {
-      instance.title = "foo"
+      instance.title = 'foo'
     }.to raise_error NoMethodError
 
     expect {
@@ -74,7 +74,7 @@ describe Paradocs::Struct do
     }.to raise_error RuntimeError
   end
 
-  it "works with anonymous nested schemas" do
+  it 'works with anonymous nested schemas' do
     klass = Class.new do
       include Paradocs::Struct
 
@@ -125,7 +125,7 @@ describe Paradocs::Struct do
     expect(user.friends.first.salutation).to eq 'my age is 43'
   end
 
-  it "wraps regular schemas in structs" do
+  it 'wraps regular schemas in structs' do
     friend_schema = Paradocs::Schema.new do
       field(:name)
     end
@@ -147,7 +147,7 @@ describe Paradocs::Struct do
     expect(instance.friends.first.name).to eq 'Ismael'
   end
 
-  it "#to_h" do
+  it '#to_h' do
     klass = Class.new do
       include Paradocs::Struct
 
@@ -185,7 +185,7 @@ describe Paradocs::Struct do
     expect(new_instance.to_h[:title]).to eq 'foo'
   end
 
-  it "works with inheritance" do
+  it 'works with inheritance' do
     klass = Class.new do
       include Paradocs::Struct
 
@@ -218,7 +218,7 @@ describe Paradocs::Struct do
     expect(instance.friends.size).to eq 2
   end
 
-  it "implements deep struct equality" do
+  it 'implements deep struct equality' do
     klass = Class.new do
       include Paradocs::Struct
 
@@ -268,7 +268,7 @@ describe Paradocs::Struct do
     expect(s1 == s4).to be false
   end
 
-  it "#merge returns a new instance" do
+  it '#merge returns a new instance' do
     klass = Class.new do
       include Paradocs::Struct
 
@@ -301,6 +301,20 @@ describe Paradocs::Struct do
     expect(copy.friends.first.name).to eq 'jane'
   end
 
+  it 'passes the environment to the schema' do
+    klass = Class.new do
+      include Paradocs::Struct
+
+      schema do
+        field(:age).type(:integer)
+      end
+    end
+
+    new_instance = klass.new({}, { key: :value })
+
+    expect(new_instance.send(:_results).environment).to eq({ key: :value })
+  end
+
   describe '.new!' do
     it 'raises a useful exception if invalid data' do
       klass = Class.new do
@@ -319,6 +333,20 @@ describe Paradocs::Struct do
 
       valid = klass.new!(title: 'foo')
       expect(valid.title).to eq 'foo'
+    end
+
+    it 'passes the environment to the schema' do
+      klass = Class.new do
+        include Paradocs::Struct
+
+        schema do
+          field(:title).type(:string).present
+        end
+      end
+
+      new_instance = klass.new!({ title: 'test' }, { key: :value })
+
+      expect(new_instance.send(:_results).environment).to eq({ key: :value })
     end
   end
 end
