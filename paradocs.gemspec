@@ -6,8 +6,8 @@ require 'paradocs/version'
 Gem::Specification.new do |spec|
   spec.name          = "paradocs"
   spec.version       = Paradocs::VERSION
-  spec.authors       = ["Ismael Celis", "Maxim Tkachenko"]
-  spec.email         = ["ismaelct@gmail.com", "tkachenko.maxim.w@gmail.com"]
+  spec.authors       = ["Maxim Tkachenko", "Ismael Celis"]
+  spec.email         = ["tkachenko.maxim.w@gmail.com", "ismaelct@gmail.com"]
   spec.description   = %q{Flexible DSL for declaring allowed parameters focused on DRY validation that gives you opportunity to generate API documentation on-the-fly.}
   spec.summary       = %q{A huge add-on for original gem mostly focused on retrieving the more metadata from declared schemas as possible.}
   spec.homepage      = "https://github.com/mtkachenk0/paradocs"
