@@ -6,9 +6,13 @@ Declaratively define data schemas in your Ruby objects, and use them to whitelis
 
 Useful for building self-documeting APIs, search or form objects. Or possibly as an alternative to Rails' _strong parameters_ (it has no dependencies on Rails and can be used stand-alone).
 ## Installation
+```sh
+$ gem install paradocs
+```
 
+Or with Bundler in your Gemfile.
 ```rb
-gem 'paradocs', git: 'https://github.com/mtkachenk0/paradocs'
+gem 'paradocs'
 ```
 
 ## Getting Started
