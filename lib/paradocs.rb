@@ -22,7 +22,8 @@ module Paradocs
       explicit_errors:     false,
       whitelisted_keys:    [],
       default_schema_name: :schema,
-      meta_prefix:         "_"
+      meta_prefix:         "_",
+      whitelist_coercion:  nil
     )
   end
 
