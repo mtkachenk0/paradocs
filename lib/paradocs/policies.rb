@@ -107,7 +107,6 @@ module Paradocs
       define_method(:meta_data) do
         meta = super()
         meta[policy][:limit] = limit
-        binding.pry unless meta.dig(policy, :limit)
         meta
       end
 

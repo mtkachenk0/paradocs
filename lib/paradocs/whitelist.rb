@@ -32,12 +32,14 @@ module Paradocs
 
       def resolve(payload, schema, context)
         filtered_payload = {}
+        coercion_block = Paradocs.config.whitelist_coercion
+        coercion_block = coercion_block.is_a?(Proc) && coercion_block
         payload.dup.each do |key, value|
           key    = key.to_sym
           schema = Schema.new if schema.nil?
           schema.send(:flush!)
           schema.send(:invoke_subschemes!, payload, context)
-
+          meta = get_meta_data(schema, key)
           if value.is_a?(Hash)
             field_schema = find_schema_by(schema, key)
             value        = resolve(value, field_schema, context)
@@ -47,13 +49,14 @@ module Paradocs
                 field_schema = find_schema_by(schema, key)
                 resolve(v, field_schema, context)
               else
-                v = FILTERED unless whitelisted?(schema, key)
+                v = FILTERED unless whitelisted?(meta, key)
                 v
               end
             end
           else
-            value = if whitelisted?(schema, key)
-              value
+
+            value = if whitelisted?(meta, key)
+              coercion_block ? coercion_block.call(value, meta) : value
             elsif value.nil? || value.try(:blank?) || value.try(:empty?)
               !!value == value ? value : EMPTY
             else
@@ -61,7 +64,6 @@ module Paradocs
             end
             value
           end
-
           filtered_payload[key] = value
         end
 
@@ -71,13 +73,12 @@ module Paradocs
       private
 
       def find_schema_by(schema, key)
-        meta_data = get_meta_data(schema, key)
-        meta_data[:schema]
+        meta = get_meta_data(schema, key)
+        meta[:schema]
       end
 
-      def whitelisted?(schema, key)
-        meta_data = get_meta_data(schema, key)
-        meta_data[:whitelisted] || Paradocs.config.whitelisted_keys.include?(key)
+      def whitelisted?(meta, key)
+        meta[:whitelisted] || Paradocs.config.whitelisted_keys.include?(key)
       end
 
       def get_meta_data(schema, key)
