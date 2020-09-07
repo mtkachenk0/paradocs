@@ -93,5 +93,38 @@ describe "classes including Whitelist module" do
         }
       )
     end
+
+    context "when Paradocs.config.whitelist_coercion block is set" do
+      before { Paradocs.config.whitelist_coercion = Proc.new { |value, meta| meta[:type] != :string ? "FILTER" : value.to_s }}
+
+      it "executes block for each value" do
+        whitelisted = TestWhitelist.new.filter!(input, schema)
+        expect(whitelisted).to eq(
+          {
+            unexpected: "[FILTERED]",
+            from_config: "FILTER",
+            data: [
+              {
+                id: "5",
+                name: "[EMPTY]",
+                unexpected: "[EMPTY]",
+                empty_array: [],
+                subschema_1: "FILTER",
+                subfield_1: "FILTER",
+                subschema_2: "[FILTERED]",
+                subfield_2: "FILTER",
+                empty_hash: {},
+                extra: {
+                  id: "6",
+                  name: "[FILTERED]",
+                  unexpected: "[FILTERED]",
+                  empty_string: "[EMPTY]"
+                }
+              }
+            ]
+          }
+        )
+      end
+    end
   end
 end
