@@ -1,12 +1,11 @@
 require "paradocs/context"
 require "paradocs/results"
 require "paradocs/field"
-require "paradocs/extensions/insides"
+require "paradocs/extensions/structure"
+require "paradocs/extensions/payload_builder"
 
 module Paradocs
   class Schema
-    include Extensions::Insides
-
     attr_accessor :environment
     attr_reader :subschemes
     def initialize(options={}, &block)
@@ -27,6 +26,27 @@ module Paradocs
     def mutation_by!(key, &block)
       f = @fields.keys.include?(key) ? @fields[key] : field(key).transparent
       f.mutates_schema!(&block)
+    end
+
+    def structure(ignore_transparent: true, &block)
+      flush!
+      Paradocs::Extensions::Structure.new(self, ignore_transparent).structure(&block)
+    end
+
+    def flatten_structure(ignore_transparent: true, &block)
+      flush!
+      Paradocs::Extensions::Structure.new(self, ignore_transparent).flatten_structure(&block)
+    end
+
+    def walk(meta_key = nil, &visitor)
+      r = visit(meta_key, &visitor)
+      Results.new(r, {}, {})
+    end
+
+    def visit(meta_key = nil, &visitor)
+      fields.each_with_object({}) do |(_, field), m|
+        m[field.key] = field.visit(meta_key, &visitor)
+      end
     end
 
     def subschema(*args, &block)
