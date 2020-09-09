@@ -40,21 +40,19 @@ module Paradocs
       def all_nested(&block)
         @all_nested ||= all_flatten(&block).each_with_object({}) do |(name, struct), obj|
           obj[name] = {}
+          # sort the flatten struct to have iterated 1lvl keys before 2lvl and so on...
           struct.sort_by { |k, v| k.to_s.count(".") }.each do |key, value|
             target = obj[name]
-            key, value = key.to_s, value.clone
-            next if key == subschemes
-            next target[key.to_sym] = value if key.start_with?(Paradocs.config.meta_prefix)
+            key, value = key.to_s, value.clone # clone the values, because we do mutation below
+            next target[key.to_sym] = value if key.start_with?(Paradocs.config.meta_prefix) # copy meta fields
+
             parts = key.split(".")
-            if parts.size == 1
-              target[key] ||= value
-            else
-              parts.each.with_index do |subkey, index|
-                target[subkey] ||= value
-                next if parts.size == index + 1
-                target[subkey][:structure] ||= {}
-                target = target[subkey][:structure]
-              end
+            next target[key] ||= value if parts.size == 1 # copy 1lvl key
+            parts.each.with_index do |subkey, index|
+              target[subkey] ||= value
+              next if parts.size == index + 1
+              target[subkey][:structure] ||= {}
+              target = target[subkey][:structure] # target goes deeper for each part
             end
           end
         end
@@ -63,9 +61,16 @@ module Paradocs
       def all_flatten(schema_structure=nil, &block)
         return @all_flatten if @all_flatten
         schema_structure ||= flatten(&block)
-        return @all_flatten = {generic: schema_structure} if schema_structure[subschemes].empty?
+        if schema_structure[subschemes].empty?
+          schema_structure.delete(subschemes) # don't include redundant key
+          return @all_flatten = {generic: schema_structure}
+        end
         @all_flatten = schema_structure[subschemes].each_with_object({}) do |(name, subschema), result|
-          next result[name] = schema_structure.merge(subschema) if subschema[subschemes].empty?
+          if subschema[subschemes].empty?
+             result[name] = schema_structure.merge(subschema)
+             result[name].delete(subschemes)
+             next result[name]
+          end
 
           all_flatten(subschema).each do |sub_name, schema|
             result["#{name}_#{sub_name}".to_sym] = schema_structure.merge(schema)

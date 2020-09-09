@@ -175,7 +175,6 @@ describe Paradocs::Extensions::Structure do
       expect(schema.structure.all_flatten).to eq({
         subschema: {
           _errors: [],
-          _subschemes: {},
           "data"             => {type: :object, required: true, present: true, json_path: "$.data"},
           "data.id"          => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
           "data.name"        => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true},
@@ -186,7 +185,6 @@ describe Paradocs::Extensions::Structure do
         },
         test_subschema: {
           _errors: [],
-          _subschemes: {},
           "data"             => {type: :object, required: true, present: true, json_path: "$.data"},
           "data.id"          => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
           "data.name"        => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true},
@@ -204,7 +202,6 @@ describe Paradocs::Extensions::Structure do
       result = schema.structure.all_nested
       expect(result[:subschema]).to eq({
         _errors:     [],
-        _subschemes: {},
         "data" => {
           type:      :object,
           required:  true,
@@ -221,7 +218,6 @@ describe Paradocs::Extensions::Structure do
       })
       expect(result[:test_subschema]).to eq({
         _errors:     [],
-        _subschemes: {},
         "data" => {
           type:      :object,
           required:  true,
