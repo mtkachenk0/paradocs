@@ -7,7 +7,7 @@ require "paradocs/extensions/payload_builder"
 module Paradocs
   class Schema
     attr_accessor :environment
-    attr_reader :subschemes
+    attr_reader :subschemes, :structure_builder
     def initialize(options={}, &block)
       @options = options
       @fields = {}
@@ -17,6 +17,7 @@ module Paradocs
       @default_field_policies = []
       @ignored_field_keys = []
       @expansions = {}
+      @structure_builder = Paradocs::Extensions::Structure.new(self)
     end
 
     def schema
@@ -28,14 +29,10 @@ module Paradocs
       f.mutates_schema!(&block)
     end
 
-    def structure(ignore_transparent: true, &block)
+    def structure(ignore_transparent: true)
       flush!
-      Paradocs::Extensions::Structure.new(self, ignore_transparent).structure(&block)
-    end
-
-    def flatten_structure(ignore_transparent: true, &block)
-      flush!
-      Paradocs::Extensions::Structure.new(self, ignore_transparent).flatten_structure(&block)
+      structure_builder.ignore_transparent = ignore_transparent
+      structure_builder
     end
 
     def walk(meta_key = nil, &visitor)
@@ -163,6 +160,11 @@ module Paradocs
       end
     end
 
+    def flush!
+      @fields = {}
+      @applied = false
+    end
+
     protected
 
     attr_reader :definitions, :options
@@ -224,11 +226,6 @@ module Paradocs
         self.instance_exec(options, &d)
       end
       @applied = true
-    end
-
-    def flush!
-      @fields = {}
-      @applied = false
     end
   end
 end
