@@ -39,7 +39,6 @@ describe Paradocs::Extensions::Structure do
     end
   end
 
-
   describe "#nested" do
     it "generates nested data for documentation generation" do
       result = schema.structure.nested { |k, meta| meta[:block_works] = true unless meta[:present] }
@@ -165,6 +164,75 @@ describe Paradocs::Extensions::Structure do
             _errors: [],
             _subschemes: {},
             "data.test_field" => {required: true, present: true, json_path: "$.data.test_field"}
+          }
+        }
+      })
+    end
+  end
+
+  describe "#all_flatten" do
+    it "generates N structures, where N = number of unique combinations of applied subschemas" do
+      expect(schema.structure.all_flatten).to eq({
+        subschema: {
+          _errors: [],
+          _subschemes: {},
+          "data"             => {type: :object, required: true, present: true, json_path: "$.data"},
+          "data.id"          => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
+          "data.name"        => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true},
+          "data.role"        => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
+          "data.extra"       => {type: :array, required: true, json_path: "$.data.extra[]"},
+          "data.extra.extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra"},
+          "data.test_field"  => {required: true, present: true, json_path: "$.data.test_field"}
+        },
+        test_subschema: {
+          _errors: [],
+          _subschemes: {},
+          "data"             => {type: :object, required: true, present: true, json_path: "$.data"},
+          "data.id"          => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
+          "data.name"        => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true},
+          "data.role"        => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
+          "data.extra"       => {type: :array, required: true, json_path: "$.data.extra[]"},
+          "data.extra.extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra"},
+          "data.test1"       => {required: true, present: true, json_path: "$.data.test1"}
+        }
+      })
+    end
+  end
+
+  describe "#all_nested" do
+    it "generates N structures, where N = number of unique combinations of applied subschemas" do
+      result = schema.structure.all_nested
+      expect(result[:subschema]).to eq({
+        _errors:     [],
+        _subschemes: {},
+        "data" => {
+          type:      :object,
+          required:  true,
+          present:   true,
+          json_path: "$.data",
+          structure: {
+            "role"       => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
+            "extra"      => {type: :array, required: true, json_path: "$.data.extra[]", structure: {"extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra"}}},
+            "test_field" => {required: true, present: true, json_path: "$.data.test_field"},
+            "id"         => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
+            "name"       => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true}
+          }
+        }
+      })
+      expect(result[:test_subschema]).to eq({
+        _errors:     [],
+        _subschemes: {},
+        "data" => {
+          type:      :object,
+          required:  true,
+          present:   true,
+          json_path: "$.data",
+          structure: {
+            "role"  => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
+            "extra" => {type: :array, required: true, json_path: "$.data.extra[]", structure: {"extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra"}}},
+            "test1" => {required: true, present: true, json_path: "$.data.test1"},
+            "id"    => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
+            "name"  => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true}
           }
         }
       })

@@ -44,7 +44,7 @@ module Paradocs
             target = obj[name]
             key, value = key.to_s, value.clone
             next if key == subschemes
-            next target[key] = value if key.start_with?(Paradocs.config.meta_prefix)
+            next target[key.to_sym] = value if key.start_with?(Paradocs.config.meta_prefix)
             parts = key.split(".")
             if parts.size == 1
               target[key] ||= value

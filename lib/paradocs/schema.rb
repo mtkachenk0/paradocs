@@ -2,7 +2,6 @@ require "paradocs/context"
 require "paradocs/results"
 require "paradocs/field"
 require "paradocs/extensions/structure"
-require "paradocs/extensions/payload_builder"
 
 module Paradocs
   class Schema
