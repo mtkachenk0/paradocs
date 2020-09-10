@@ -188,7 +188,7 @@ all_nested[:subschema] # =>
     required:  true,
     present:   true,
     json_path: "$.data",
-		nested_name: "data",
+    nested_name: "data",
     structure: {
       "role"       => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true, nested_name: "data.role"},
       "test_field" => {required: true, present: true, json_path: "$.data.test_field", nested_name: "data.test_field"},
@@ -209,7 +209,7 @@ all_nested[:test_subschema] # =>
     required:  true,
     present:   true,
     json_path: "$.data",
-		nested_name: "data",
+    nested_name: "data",
     structure: {
       "role"  => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true, nested_name: "data.role"},
       "test1" => {required: true, present: true, json_path: "$.data.test1", nested_name: "data.test1"},
