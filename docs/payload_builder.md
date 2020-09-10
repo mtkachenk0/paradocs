@@ -1,4 +1,4 @@
-# Payload Builder
+# Generate examples from the Schema
 
 > Schema instance provides #example_payloads method that returns example of all possible structures.
 
