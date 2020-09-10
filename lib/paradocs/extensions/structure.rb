@@ -1,6 +1,7 @@
 module Paradocs
   module Extensions
     class Structure
+      DEFAULT = :generic
       %w(errors subschemes).each do |key|
         define_method(key) { "#{Paradocs.config.meta_prefix}#{key}".to_sym }
       end
@@ -63,7 +64,7 @@ module Paradocs
         schema_structure ||= flatten(&block)
         if schema_structure[subschemes].empty?
           schema_structure.delete(subschemes) # don't include redundant key
-          return @all_flatten = {generic: schema_structure}
+          return @all_flatten = {DEFAULT => schema_structure}
         end
         @all_flatten = schema_structure[subschemes].each_with_object({}) do |(name, subschema), result|
           if subschema[subschemes].empty?

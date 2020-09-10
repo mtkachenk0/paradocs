@@ -1,7 +1,6 @@
 module Paradocs
   module Extensions
     class PayloadBuilder
-      DEFAULT = :generic
       attr_reader :structure, :result
       attr_accessor :skip_word
       def initialize(schema, skip_word: :skip)
