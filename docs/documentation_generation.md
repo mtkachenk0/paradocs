@@ -1,97 +1,252 @@
 # Documentation Generation
-## #structure
 
-A `Schema` instance has a `#structure` method that allows instrospecting schema meta data.
+A `Schema` instance has a `#structure` method that return `Paradocs::Extensions::Structure` instance that allows instrospecting schema meta data.
 
+It's supposed to have the following schema:
 ```ruby
-create_user_schema.structure[:name][:label] # => "User's full name"
-create_user_schema.structure[:age][:label] # => "User's age"
-create_user_schema.structure[:friends][:label] # => "User friends"
-# Recursive schema structures
-create_user_schema.structure => {
-  _errors: [],
-  _subschemes: {},
-  name: {
-    required: true,
-    type: :string,
-    label: "User's full name"
-  },
-  status: {
-    options: ["published", "unpublished"],
-    default: "published"
-  },
-  age: {
-    type: :integer,
-    label: "User's age"
-  },
-  friends: {
-    type: :array,
-    label: "User friends",
-    structure: {
-      _subschemes: {},
-      name: {
-        type: :string,
-        required: true,
-        present: true,
-        label: "Friend full name"
+schema = Paradocs::Schema.new do
+  field(:data).type(:object).present.schema do
+    field(:id).type(:integer).present.policy(:policy_with_error)
+    field(:name).type(:string).meta(label: "very important staff")
+    field(:role).type(:string).declared.options(["admin", "user"]).default("user").mutates_schema! do |*|
+      :test_subschema
+    end
+    field(:extra).type(:array).required.schema do
+      field(:extra).declared.default(false).policy(:policy_with_silent_error)
+    end
+
+    mutation_by!(:name) { :subschema }
+
+    subschema(:subschema) do
+      field(:test_field).present
+    end
+    subschema(:test_subschema) do
+      field(:test1).present
+    end
+  end
+end
+```
+
+## Structure#nested
+> This method returns schema structure in a nested way including subschemes.
+```ruby
+schema.structure.nested.to_json # =>
+{
+  "_errors": ["ArgumentError"],
+  "_subschemes": {},
+  "data": {
+    "type": "object",
+    "required": true,
+    "present": true,
+    "json_path": "$.data",
+    "nested_name": "data",
+    "structure": {
+      "_subschemes": {
+        "subschema": {
+          "_errors": [],
+          "_subschemes": {},
+          "test_field": {
+            "required": true,
+            "present": true,
+            "json_path": "$.data.test_field",
+            "nested_name": "data.test_field"
+          }
+        },
+        "test_subschema": {
+          "_errors": [],
+          "_subschemes": {},
+          "test1": {
+            "required": true,
+            "present": true,
+            "json_path": "$.data.test1",
+            "nested_name": "data.test1"
+          }
+        }
       },
-      email: {label: "Friend's email"}
+      "id": {
+        "type": "integer",
+        "required": true,
+        "present": true,
+        "policy_with_error": {"errors": ["ArgumentError"]},
+        "json_path": "$.data.id",
+        "nested_name": "data.id"
+      },
+      "name": {
+        "type": "string",
+        "label": "very important staff",
+        "json_path": "$.data.name",
+        "mutates_schema": true,
+        "nested_name": "data.name"
+      },
+      "role": {
+        "type": "string",
+        "options": ["admin", "user"],
+        "default": "user",
+        "json_path": "$.data.role",
+        "mutates_schema": true,
+        "nested_name": "data.role"
+      },
+      "extra": {
+        "type": "array",
+        "required": true,
+        "json_path": "$.data.extra[]",
+        "nested_name": "data.extra",
+        "structure": {
+          "_subschemes": {},
+          "extra": {
+            "default": false,
+            "policy_with_silent_error": {"errors": []},
+            "json_path": "$.data.extra[].extra",
+            "nested_name": "data.extra.extra"
+          }
+        }
+      }
     }
   }
 }
 ```
 
-Note that many field policies add field meta data.
-
-```ruby
-create_user_schema.structure[:name][:type] # => :string
-create_user_schema.structure[:name][:required] # => true
-create_user_schema.structure[:status][:options] # => ["published", "unpublished"]
-create_user_schema.structure[:status][:default] # => "published"
-```
-
-
-# #flatten_structure
- A `Schema` instance also has a `#flatten_structure` method that allows instrospecting schema meta data without deep nesting.
+## Structure#flatten
+> This method returns schema structure in a flatten (without deep nesting) way including subschemes.
 ```rb
+schema.structure.flatten.to_json # =>
 {
-  _errors: [],
-  _subschemes: {},
-  "name"=>{
-    required: true,
-    type: :string,
-    label: "User's full name",
-    json_path: "$.name"
+  "_errors": ["ArgumentError"],
+  "_subschemes": {
+    "subschema": {
+      "_errors": [],
+      "_subschemes": {},
+      "data.test_field": {
+        "required": true,
+        "present": true,
+        "json_path": "$.data.test_field"
+      }
+    },
+    "test_subschema": {
+      "_errors": [],
+      "_subschemes": {},
+      "data.test1": {
+        "required": true,
+        "present": true,
+        "json_path": "$.data.test1"
+      }
+    }
   },
-  "status"=>{
-    options: ["published", "unpublished"],
-    default: "published",
-    json_path: "$.status"
+  "data": {
+    "type": "object",
+    "required": true,
+    "present": true,
+    "json_path": "$.data"
   },
-  "age"=>{
-    type: :integer,
-    label: "User's age", :json_path=>"$.age"
+  "data.id": {
+    "type": "integer",
+    "required": true,
+    "present": true,
+    "policy_with_error": {"errors": ["ArgumentError"]},
+    "json_path": "$.data.id"
   },
-  "friends"=>{
-    type: :array,
-    label: "User friends",
-    json_path: "$.friends"
+  "data.name": {
+    "type": "string",
+    "label": "very important staff",
+    "json_path": "$.data.name",
+    "mutates_schema": true
   },
-  "friends.name"=>{
-    type: :string,
-    required: true,
-    present: true,
-    label: "Friend full name",
-    json_path: "$.friends.name"
+  "data.role": {
+    "type": "string",
+    "options": ["admin", "user"],
+    "default": "user",
+    "json_path": "$.data.role",
+    "mutates_schema": true
   },
-  "friends.email"=>{
-    label: "Friend's email",
-    json_path: "$.friends.email"
+  "data.extra": {
+    "type": "array",
+    "required": true,
+    "json_path": "$.data.extra[]"
+  },
+  "data.extra.extra": {
+    "default": false,
+    "policy_with_silent_error": {"errors": []},
+    "json_path": "$.data.extra[].extra"
   }
 }
 ```
 
-## #walk
+
+## Structure#all_nested
+
+> This method returns all available combinations of schema (built on subschemas) saving the nesting.
+
+Will return a hash with 2 structures named by the names of declared subschemas:
+```rb
+all_nested = schema.structure.all_nested
+all_nested.keys # => [:subschema, :test_subschema]
+all_nested[:subschema] # =>
+{
+  _errors: [],
+  "data" => {
+    type:      :object,
+    required:  true,
+    present:   true,
+    json_path: "$.data",
+    structure: {
+      "role"       => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
+      "extra"      => {type: :array, required: true, json_path: "$.data.extra[]", structure: {"extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra"}}},
+      "test_field" => {required: true, present: true, json_path: "$.data.test_field"},
+      "id"         => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
+      "name"       => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true}
+    }
+  }
+}
+all_nested[:test_subschema] # =>
+{
+  _errors:     [],
+  "data" => {
+    type:      :object,
+    required:  true,
+    present:   true,
+    json_path: "$.data",
+    structure: {
+      "role"  => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
+      "extra" => {type: :array, required: true, json_path: "$.data.extra[]", structure: {"extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra"}}},
+      "test1" => {required: true, present: true, json_path: "$.data.test1"},
+      "id"    => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
+      "name"  => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true}
+    }
+  }
+}
+```
+
+## Structure#all_flatten
+> This method returns all available combinations of schema (built on subschema) without nesting (the same way as Structure#flatten method does)
+
+Schema is the same as described in Structure#all_nested
+```rb
+schema.structure.all_flatten # =>
+{
+  subschema: {
+    _errors: [],
+    "data"             => {type: :object, required: true, present: true, json_path: "$.data"},
+    "data.id"          => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
+    "data.name"        => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true},
+    "data.role"        => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
+    "data.extra"       => {type: :array, required: true, json_path: "$.data.extra[]"},
+    "data.extra.extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra"},
+    "data.test_field"  => {required: true, present: true, json_path: "$.data.test_field"}
+  },
+  test_subschema: {
+    _errors: [],
+    "data"             => {type: :object, required: true, present: true, json_path: "$.data"},
+    "data.id"          => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
+    "data.name"        => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true},
+    "data.role"        => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
+    "data.extra"       => {type: :array, required: true, json_path: "$.data.extra[]"},
+    "data.extra.extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra"},
+    "data.test1"       => {required: true, present: true, json_path: "$.data.test1"}
+  }
+}
+```
+
+## Schema#walk
 
 The `#walk` method can recursively walk a schema definition and extract meta data or field attributes.
 

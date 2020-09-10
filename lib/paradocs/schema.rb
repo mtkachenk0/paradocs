@@ -35,8 +35,8 @@ module Paradocs
       structure_builder
     end
 
-    def example_payloads
-      @example_payloads ||= Paradocs::Extensions::PayloadBuilder.new(self).build!
+    def example_payloads(&block)
+      @example_payloads ||= Paradocs::Extensions::PayloadBuilder.new(self).build!(&block)
     end
 
     def walk(meta_key = nil, &visitor)
