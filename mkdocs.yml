@@ -1,5 +1,7 @@
 site_name: Paradocs
-
+theme:
+    name: readthedocs
+    nav_style: dark
 nav:
   - 'index.md'
   - 'policies.md'
