@@ -1,9 +1,8 @@
 # Generate examples from the Schema
 
-> Schema instance provides #example_payloads method that returns example of all possible structures.
+> `Schema` instance provides `#example_payloads` method that returns example of all possible structures.
 
-NOTE: PayloadBuilder sets nil values by default. If options are given - builder will take on of them, if default is set - builder will use it.
-> PayloadBuilder#build! method takes a block as argument that may help you adding your custom rules.
+NOTE: `PayloadBuilder` sets nil values by default. If options are given - builder will take on of them, if default is set - builder will use it.
 
 #### Example schema
 ```ruby
@@ -59,12 +58,14 @@ schema.example_payloads.to_json # =>
 ```
 
 ## Customize payload generation logic
-PayloadBuilder#build! allows passing a block that will receive the following arguments:
+`PayloadBuilder#build!` arguments:
 
-- key: Field name
-- meta: Field meta data (that includes (if provided) field types, presence data, policies and other meta data
-- example_value: Provided by generator example value.
-- skip_word: Return this argument back if you want this item to be ommitted.
+1. `sort_by_schema: true` will try to return payload in the same way as declared in the schema.
+2. `&block` will be executed for each key receiving the following arguments:
+	- `key`: Field name
+	- `meta`: Field meta data (that includes (if provided) field types, presence data, policies and other meta data
+	- `example_value`: Provided by generator example value.
+	- `skip_word`: Return this argument back if you want this item to be ommitted.
 
 ```rb
 block = Proc.new do |key, meta, example, skip_word|

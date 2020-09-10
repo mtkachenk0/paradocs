@@ -45,6 +45,7 @@ module Paradocs
           struct.sort_by { |k, v| k.to_s.count(".") }.each do |key, value|
             target = obj[name]
             key, value = key.to_s, value.clone # clone the values, because we do mutation below
+            value.merge!(nested_name: key) if value.respond_to?(:merge) # it can be array (_errors)
             next target[key.to_sym] = value if key.start_with?(Paradocs.config.meta_prefix) # copy meta fields
 
             parts = key.split(".")
@@ -68,9 +69,11 @@ module Paradocs
         end
         @all_flatten = schema_structure[subschemes].each_with_object({}) do |(name, subschema), result|
           if subschema[subschemes].empty?
-             result[name] = schema_structure.merge(subschema)
-             result[name].delete(subschemes)
-             next result[name]
+            result[name] = schema_structure.merge(subschema)
+            result[name][errors] += schema_structure[errors]
+            result[name][errors].uniq!
+            result[name].delete(subschemes)
+            next result[name]
           end
 
           all_flatten(subschema).each do |sub_name, schema|
