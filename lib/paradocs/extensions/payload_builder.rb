@@ -8,8 +8,9 @@ module Paradocs
         @skip_word  = skip_word
       end
 
-      def build!(&block)
-        structure.all_nested.map { |name, struct| [name, build_simple_structure(struct, &block)] }.to_h
+      def build!(sort_by_schema: false, &block)
+        result = structure.all_nested.map { |name, struct| [name, build_simple_structure(struct, &block)] }.to_h
+        sort_by_schema ? schema.resolve(result).output : result
       end
 
       private

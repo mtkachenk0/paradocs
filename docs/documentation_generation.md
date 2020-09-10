@@ -188,12 +188,16 @@ all_nested[:subschema] # =>
     required:  true,
     present:   true,
     json_path: "$.data",
+		nested_name: "data",
     structure: {
-      "role"       => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
-      "extra"      => {type: :array, required: true, json_path: "$.data.extra[]", structure: {"extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra"}}},
-      "test_field" => {required: true, present: true, json_path: "$.data.test_field"},
-      "id"         => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
-      "name"       => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true}
+      "role"       => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true, nested_name: "data.role"},
+      "test_field" => {required: true, present: true, json_path: "$.data.test_field", nested_name: "data.test_field"},
+      "id"         => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id", nested_name: "data.id"},
+      "name"       => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true, nested_name: "data.name"},
+      "extra"      => {
+        type: :array, required: true, json_path: "$.data.extra[]", nested_name: "data.extra",
+        structure: {"extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra", nested_name: "data.extra.extra"}}
+      }
     }
   }
 }
@@ -205,12 +209,16 @@ all_nested[:test_subschema] # =>
     required:  true,
     present:   true,
     json_path: "$.data",
+		nested_name: "data",
     structure: {
-      "role"  => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
-      "extra" => {type: :array, required: true, json_path: "$.data.extra[]", structure: {"extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra"}}},
-      "test1" => {required: true, present: true, json_path: "$.data.test1"},
-      "id"    => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
-      "name"  => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true}
+      "role"  => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true, nested_name: "data.role"},
+      "test1" => {required: true, present: true, json_path: "$.data.test1", nested_name: "data.test1"},
+      "id"    => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id", nested_name: "data.id"},
+      "name"  => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true, nested_name: "data.name"},
+      "extra" => {
+        type: :array, required: true, json_path: "$.data.extra[]", nested_name: "data.extra",
+        structure: {"extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra", nested_name: "data.extra.extra"}}
+      }
     }
   }
 }
@@ -219,32 +227,37 @@ all_nested[:test_subschema] # =>
 ## Structure#all_flatten
 > This method returns all available combinations of schema (built on subschema) without nesting (the same way as Structure#flatten method does)
 
-Schema is the same as described in Structure#all_nested
+Schema is the same as described in `Structure#all_nested`
 ```rb
 schema.structure.all_flatten # =>
 {
   subschema: {
     _errors: [],
-    "data"             => {type: :object, required: true, present: true, json_path: "$.data"},
-    "data.id"          => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
-    "data.name"        => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true},
-    "data.role"        => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
-    "data.extra"       => {type: :array, required: true, json_path: "$.data.extra[]"},
-    "data.extra.extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra"},
-    "data.test_field"  => {required: true, present: true, json_path: "$.data.test_field"}
+    "data"             => {type: :object, required: true, present: true, json_path: "$.data", nested_name: "data"},
+    "data.id"          => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id", nested_name: "data.id"},
+    "data.name"        => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true, nested_name: "data.name"},
+    "data.role"        => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true, nested_name: "data.role"},
+    "data.extra"       => {type: :array, required: true, json_path: "$.data.extra[]", nested_name: "data.extra"},
+    "data.extra.extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra", nested_name: "data.extra.extra"},
+    "data.test_field"  => {required: true, present: true, json_path: "$.data.test_field", nested_name: "data.test_field"}
   },
   test_subschema: {
     _errors: [],
-    "data"             => {type: :object, required: true, present: true, json_path: "$.data"},
-    "data.id"          => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id"},
-    "data.name"        => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true},
-    "data.role"        => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
-    "data.extra"       => {type: :array, required: true, json_path: "$.data.extra[]"},
-    "data.extra.extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra"},
-    "data.test1"       => {required: true, present: true, json_path: "$.data.test1"}
+    "data"             => {type: :object, required: true, present: true, json_path: "$.data", nested_name: "data"},
+    "data.id"          => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, json_path: "$.data.id", nested_name: "data.id"},
+    "data.name"        => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true, nested_name: "data.name"},
+    "data.role"        => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true, nested_name: "data.role"},
+    "data.extra"       => {type: :array, required: true, json_path: "$.data.extra[]", nested_name: "data.extra"},
+    "data.extra.extra" => {default: false, policy_with_silent_error: {errors: []}, json_path: "$.data.extra[].extra", nested_name: "data.extra.extra"},
+    "data.test1"       => {required: true, present: true, json_path: "$.data.test1", nested_name: "data.test1"}
   }
 }
 ```
+
+## Passing a block
+Given block to the methods above (`#flatten`, `#nested`, `#all_flatten`, `#all_nested`) will be executed for
+each field, passing you as arguments `field.key` and `field.meta`. Mutating the second argument `field.meta`
+will reflect onto returned `meta`.
 
 ## Schema#walk
 
