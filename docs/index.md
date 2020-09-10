@@ -1,6 +1,6 @@
 # Getting Started
 ## Introduction
-> Paradocs = Extended [Parametric gem](https://github.com/ismasan/parametric) + Documentation Generation
+> [Paradocs](https://github.com/mtkachenk0/paradocs) = Extended [Parametric gem](https://github.com/ismasan/parametric) + Documentation Generation
 
 ![Ruby](https://github.com/mtkachenk0/paradocs/workflows/Ruby/badge.svg)
 
