@@ -1,3 +1,4 @@
+# Schema
 ## Expanding fields dynamically
 
 Sometimes you don't know the exact field names but you want to allow arbitrary fields depending on a given pattern.

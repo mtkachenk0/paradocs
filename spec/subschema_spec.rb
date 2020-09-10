@@ -71,16 +71,19 @@ describe "schemes with subschemes" do
       result = schema.resolve({error: :here})
       expect(result.errors).to    eq({"$.fail_field"=>["is required"]})
       expect(result.output).to    eq({error: :here, fail_field: nil})
-      expect(schema.structure).to eq(structure)
-      expect(schema.structure(ignore_transparent: false)).to eq(structure.merge(
+      expect(schema.structure.nested).to eq(structure)
+      schema.structure.flush!
+      expect(schema.structure(ignore_transparent: false).nested).to eq(structure.merge(
         error: {transparent: true, mutates_schema: true, json_path: "$.error", nested_name: "error"}
       ))
 
       result = schema.resolve({})
       expect(result.errors).to eq({"$.success_field"=>["is required"]})
       expect(result.output).to eq({success_field: nil})
-      expect(schema.structure).to eq(structure)
-      expect(schema.structure(ignore_transparent: false)).to eq(structure.merge(
+      schema.structure.flush!
+      expect(schema.structure.nested).to eq(structure)
+      schema.structure.flush!
+      expect(schema.structure(ignore_transparent: false).nested).to eq(structure.merge(
         error: {transparent: true, mutates_schema: true, json_path: "$.error", nested_name: "error"}
       ))
     end

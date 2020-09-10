@@ -10,6 +10,7 @@ nav:
   - 'form_objects_dsl.md'
   - 'subschema.md'
   - 'documentation_generation.md'
+  - 'payload_builder.md'
   - 'custom_configuration.md'
   - 'faq.md'
 

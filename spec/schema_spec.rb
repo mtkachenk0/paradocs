@@ -32,7 +32,7 @@ describe Paradocs::Schema do
 
   describe "#structure" do
     it "represents data structure and meta data" do
-      sc = subject.structure
+      sc = subject.structure.nested
       expect(sc[:title][:present]).to be true
       expect(sc[:title][:type]).to eq :string
       expect(sc[:price][:type]).to eq :integer

@@ -104,16 +104,3 @@ results = person_schema.resolve(
 results.errors # => {"$.friends[0].name" => "is required"}
 ```
 
-## Learn more
-- [Getting Started](getting_started)
-- [Built In Policies](https://github.com/mtkachenk0/paradocs/wiki/Policies#built-in-policies)
-	- [Type Policies](https://github.com/mtkachenk0/paradocs/wiki/Policies#type-coercions)
-	- [Presence Policies](https://github.com/mtkachenk0/paradocs/wiki/Policies#presence-policies)
-  - [Custom Policies](https://github.com/mtkachenk0/paradocs/wiki/Policies#custom-policies)
-- [Schema](https://github.com/mtkachenk0/paradocs/wiki/schema)
-	- [Expanding fields dynamically](https://github.com/mtkachenk0/paradocs/wiki/schema#expanding-fields-dynamically)
-	- [Multiple schema definitions](https://github.com/mtkachenk0/paradocs/wiki/schema#multiple-schema-definitions)
-- [Documentation Generation](https://github.com/mtkachenk0/paradocs/wiki/Documentation-Generation)
-- [What if my fields are conditional?!](https://github.com/mtkachenk0/paradocs/wiki/subschema)
-- [For those who need more: RTFM](https://github.com/mtkachenk0/paradocs/wiki)
-

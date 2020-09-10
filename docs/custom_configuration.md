@@ -1,4 +1,4 @@
-# Possible Configuration
+# Configuration
 ```rb
 Paradocs.configure do |config|
   config.explicit_errors = false       # set to true if you want all errors from the policies to be explicitly registered in the policy

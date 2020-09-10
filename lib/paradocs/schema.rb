@@ -1,14 +1,13 @@
 require "paradocs/context"
 require "paradocs/results"
 require "paradocs/field"
-require "paradocs/extensions/insides"
+require "paradocs/extensions/structure"
+require "paradocs/extensions/payload_builder"
 
 module Paradocs
   class Schema
-    include Extensions::Insides
-
     attr_accessor :environment
-    attr_reader :subschemes
+    attr_reader :subschemes, :structure_builder
     def initialize(options={}, &block)
       @options = options
       @fields = {}
@@ -18,6 +17,7 @@ module Paradocs
       @default_field_policies = []
       @ignored_field_keys = []
       @expansions = {}
+      @structure_builder = Paradocs::Extensions::Structure.new(self)
     end
 
     def schema
@@ -27,6 +27,27 @@ module Paradocs
     def mutation_by!(key, &block)
       f = @fields.keys.include?(key) ? @fields[key] : field(key).transparent
       f.mutates_schema!(&block)
+    end
+
+    def structure(ignore_transparent: true)
+      flush!
+      structure_builder.ignore_transparent = ignore_transparent
+      structure_builder
+    end
+
+    def example_payloads(&block)
+      @example_payloads ||= Paradocs::Extensions::PayloadBuilder.new(self).build!(&block)
+    end
+
+    def walk(meta_key = nil, &visitor)
+      r = visit(meta_key, &visitor)
+      Results.new(r, {}, {})
+    end
+
+    def visit(meta_key = nil, &visitor)
+      fields.each_with_object({}) do |(_, field), m|
+        m[field.key] = field.visit(meta_key, &visitor)
+      end
     end
 
     def subschema(*args, &block)
@@ -143,6 +164,11 @@ module Paradocs
       end
     end
 
+    def flush!
+      @fields = {}
+      @applied = false
+    end
+
     protected
 
     attr_reader :definitions, :options
@@ -204,11 +230,6 @@ module Paradocs
         self.instance_exec(options, &d)
       end
       @applied = true
-    end
-
-    def flush!
-      @fields = {}
-      @applied = false
     end
   end
 end
