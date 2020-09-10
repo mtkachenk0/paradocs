@@ -1,0 +1,15 @@
+site_name: Paradocs
+theme:
+    name: readthedocs
+    nav_style: dark
+nav:
+  - 'index.md'
+  - 'policies.md'
+  - 'schema.md'
+  - 'struct.md'
+  - 'form_objects_dsl.md'
+  - 'subschema.md'
+  - 'documentation_generation.md'
+  - 'custom_configuration.md'
+  - 'faq.md'
+
