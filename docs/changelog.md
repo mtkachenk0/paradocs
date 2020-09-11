@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.2
+- Regenerate structures each time without saving them into instance attributes.
+
 ## 1.1.1
 - Fixed bug with missing `errors` meta key in `Structure#all_nested` and `Structure#all_flatten` methods.
 - Fixed bug with absent `nested_name` meta key in `#Structure#all_nested` method.
