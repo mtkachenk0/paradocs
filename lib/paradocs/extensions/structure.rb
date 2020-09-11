@@ -14,12 +14,8 @@ module Paradocs
         @root               = root
       end
 
-      def flush!
-        @nested, @all_nested, @flatten, @all_flatten = [nil] * 4
-      end
-
       def nested(&block)
-        @nested ||= schema.fields.each_with_object({errors => [], subschemes => {}}) do |(_, field), result|
+        schema.fields.each_with_object({errors => [], subschemes => {}}) do |(_, field), result|
           meta, sc = collect_meta(field, root)
           if sc
             meta[:structure] = self.class.new(sc, ignore_transparent, meta[:json_path]).nested(&block)
@@ -39,7 +35,7 @@ module Paradocs
       end
 
       def all_nested(&block)
-        @all_nested ||= all_flatten(&block).each_with_object({}) do |(name, struct), obj|
+        all_flatten(&block).each_with_object({}) do |(name, struct), obj|
           obj[name] = {}
           # sort the flatten struct to have iterated 1lvl keys before 2lvl and so on...
           struct.sort_by { |k, v| k.to_s.count(".") }.each do |key, value|
@@ -61,13 +57,12 @@ module Paradocs
       end
 
       def all_flatten(schema_structure=nil, &block)
-        return @all_flatten if @all_flatten
         schema_structure ||= flatten(&block)
         if schema_structure[subschemes].empty?
           schema_structure.delete(subschemes) # don't include redundant key
-          return @all_flatten = {DEFAULT => schema_structure}
+          return {DEFAULT => schema_structure}
         end
-        @all_flatten = schema_structure[subschemes].each_with_object({}) do |(name, subschema), result|
+        schema_structure[subschemes].each_with_object({}) do |(name, subschema), result|
           if subschema[subschemes].empty?
             result[name] = schema_structure.merge(subschema)
             result[name][errors] += schema_structure[errors]
@@ -83,7 +78,7 @@ module Paradocs
       end
 
       def flatten(&block)
-        @flatten ||= schema.fields.each_with_object({errors => [], subschemes => {}}) do |(_, field), obj|
+        schema.fields.each_with_object({errors => [], subschemes => {}}) do |(_, field), obj|
           meta, sc = collect_meta(field, root)
           humanized_name = meta.delete(:nested_name)
           obj[humanized_name] = meta unless ignore_transparent && field.transparent?
