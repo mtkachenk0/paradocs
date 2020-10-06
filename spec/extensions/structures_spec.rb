@@ -19,7 +19,7 @@ describe Paradocs::Extensions::Structure do
 
       field(:data).type(:object).present.schema do
         field(:id).type(:integer).present.policy(:policy_with_error)
-        field(:name).type(:string).meta(label: "very important staff")
+        field(:name).type(:string).meta(label: "very important staff").description("Example description").example("John")
         field(:role).type(:string).declared.options(["admin", "user"]).default("user").mutates_schema! do |*|
           :test_subschema
         end
@@ -75,6 +75,8 @@ describe Paradocs::Extensions::Structure do
       expect(data_structure[:name]).to eq({
         type: :string,
         label: "very important staff",
+        description: "Example description",
+        example: "John",
         mutates_schema: true,
         block_works: true,
         json_path: "$.data.name",
