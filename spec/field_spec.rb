@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe Paradocs::Field do
-  let(:context)  { Paradocs::Context.new }
+  let(:context) { Paradocs::Context.new }
 
   subject { described_class.new(:a_key) }
 

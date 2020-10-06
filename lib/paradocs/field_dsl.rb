@@ -32,5 +32,13 @@ module Paradocs
     def length(opts)
       policy :length, opts
     end
+
+    def description(text)
+      meta description: text
+    end
+
+    def example(value)
+      meta example: value
+    end
   end
 end
