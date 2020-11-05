@@ -181,7 +181,7 @@ module Paradocs
       invoke_subschemes!(val, context, flds: flds)
       flds.each_with_object({}) do |(_, field), m|
         r = field.resolve(val, context.sub(field.key))
-        key = field.meta_data[:as] || field.key
+        key = field.meta_data[:alias] || field.key
         m[key] = r.value if r.eligible?
       end
     end

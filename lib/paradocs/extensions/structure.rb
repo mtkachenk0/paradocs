@@ -24,7 +24,7 @@ module Paradocs
             result[errors] += field.possible_errors
           end
 
-          field_key = field.meta_data[:as] || field.key
+          field_key = field.meta_data[:alias] || field.key
           result[field_key] = meta unless ignore_transparent && field.transparent?
           yield(field_key, meta) if block_given?
 
@@ -105,7 +105,7 @@ module Paradocs
     private
 
       def collect_meta(field, root)
-        field_key = field.meta_data[:as] || field.key
+        field_key = field.meta_data[:alias] || field.key
         json_path = root.empty? ? "$.#{field_key}" : "#{root}.#{field_key}"
         meta = field.meta_data.merge(json_path: json_path)
         sc = meta.delete(:schema)

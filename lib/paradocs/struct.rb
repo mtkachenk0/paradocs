@@ -57,7 +57,7 @@ module Paradocs
       # this hook is called after schema definition in DSL module
       def paradocs_after_define_schema(schema)
         schema.fields.keys.each do |key|
-          key = schema.fields[key].meta_data[:as] || key
+          key = schema.fields[key].meta_data[:alias] || key
           define_method key do
             _graph[key]
           end

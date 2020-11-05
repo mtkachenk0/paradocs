@@ -69,7 +69,7 @@ describe Paradocs::Extensions::Structure do
         required: true,
         present: true,
         policy_with_error: {errors: [ArgumentError]},
-        as: :user_id,
+        alias: :user_id,
         json_path: "$.data.user_id",
         nested_name: "data.user_id"
       })
@@ -136,7 +136,7 @@ describe Paradocs::Extensions::Structure do
           type: :integer,
           required: true,
           present: true,
-          as: :user_id,
+          alias: :user_id,
           json_path: "$.data.user_id",
           policy_with_error: {errors: [ArgumentError]}
         },
@@ -182,7 +182,7 @@ describe Paradocs::Extensions::Structure do
         subschema: {
           _errors: [ArgumentError],
           "data"             => {type: :object, required: true, present: true, json_path: "$.data"},
-          "data.user_id"     => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, as: :user_id, json_path: "$.data.user_id"},
+          "data.user_id"     => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, alias: :user_id, json_path: "$.data.user_id"},
           "data.name"        => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true, description: "Example description", example: "John"},
           "data.role"        => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
           "data.extra"       => {type: :array, required: true, json_path: "$.data.extra[]"},
@@ -192,7 +192,7 @@ describe Paradocs::Extensions::Structure do
         test_subschema: {
           _errors: [ArgumentError],
           "data"             => {type: :object, required: true, present: true, json_path: "$.data"},
-          "data.user_id"     => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, as: :user_id, json_path: "$.data.user_id"},
+          "data.user_id"     => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, alias: :user_id, json_path: "$.data.user_id"},
           "data.name"        => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true, description: "Example description", example: "John"},
           "data.role"        => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", mutates_schema: true},
           "data.extra"       => {type: :array, required: true, json_path: "$.data.extra[]"},
@@ -217,7 +217,7 @@ describe Paradocs::Extensions::Structure do
           structure: {
             "role"       => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", nested_name: "data.role", mutates_schema: true},
             "test_field" => {required: true, present: true, json_path: "$.data.test_field", nested_name: "data.test_field"},
-            "user_id"    => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, as: :user_id, json_path: "$.data.user_id", nested_name: "data.user_id"},
+            "user_id"    => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, alias: :user_id, json_path: "$.data.user_id", nested_name: "data.user_id"},
             "name"       => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true, nested_name: "data.name", description: "Example description", example: "John"},
             "extra"      => {
               type: :array, required: true, json_path: "$.data.extra[]", nested_name: "data.extra",
@@ -237,7 +237,7 @@ describe Paradocs::Extensions::Structure do
           structure: {
             "role"    => {type: :string, options: ["admin", "user"], default: "user", json_path: "$.data.role", nested_name: "data.role", mutates_schema: true},
             "test1"   => {required: true, present: true, json_path: "$.data.test1", nested_name: "data.test1"},
-            "user_id" => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, as: :user_id, json_path: "$.data.user_id", nested_name: "data.user_id"},
+            "user_id" => {type: :integer, required: true, present: true, policy_with_error: {errors: [ArgumentError]}, alias: :user_id, json_path: "$.data.user_id", nested_name: "data.user_id"},
             "name"    => {type: :string, label: "very important staff", json_path: "$.data.name", mutates_schema: true, nested_name: "data.name", description: "Example description", example: "John"},
             "extra"   => {
               type: :array, required: true, json_path: "$.data.extra[]", nested_name: "data.extra",

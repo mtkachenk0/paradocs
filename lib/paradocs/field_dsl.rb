@@ -38,7 +38,7 @@ module Paradocs
     end
 
     def as(identifier)
-      meta as: identifier
+      meta alias: identifier
     end
 
     def example(value)
