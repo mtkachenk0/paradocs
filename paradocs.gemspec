@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.version       = Paradocs::VERSION
   spec.authors       = ["Maxim Tkachenko", "Ismael Celis"]
   spec.email         = ["tkachenko.maxim.w@gmail.com", "ismaelct@gmail.com"]
-  spec.description   = %q{Flexible DSL for declaring allowed parameters focused on DRY validation that gives you opportunity to generate API documentation on-the-fly.}
+  spec.description   = %q{Flexible DRY validations with API docs generation done right TLDR; parametrics on steroids.}
   spec.summary       = %q{A huge add-on for original gem mostly focused on retrieving the more metadata from declared schemas as possible.}
   spec.homepage      = "https://paradocs.readthedocs.io/en/latest"
   spec.license       = "MIT"
