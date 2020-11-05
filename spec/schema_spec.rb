@@ -16,7 +16,7 @@ describe Paradocs::Schema do
 
   subject do
     described_class.new do
-      field(:title).policy(:string).present
+      field(:title).policy(:string).present.as(:article_title)
       field(:price).policy(:integer).meta(label: "A price")
       field(:status).policy(:string).options(['visible', 'hidden'])
       field(:tags).policy(:split).policy(:array)
@@ -33,8 +33,8 @@ describe Paradocs::Schema do
   describe "#structure" do
     it "represents data structure and meta data" do
       sc = subject.structure.nested
-      expect(sc[:title][:present]).to be true
-      expect(sc[:title][:type]).to eq :string
+      expect(sc[:article_title][:present]).to be true
+      expect(sc[:article_title][:type]).to eq :string
       expect(sc[:price][:type]).to eq :integer
       expect(sc[:price][:label]).to eq "A price"
       expect(sc[:variants][:type]).to eq :array
@@ -76,7 +76,7 @@ describe Paradocs::Schema do
 
     output = subject.resolve(payload).output
     expect(output).to eq({
-      title: "title",
+      article_title: "title",
       price: 100,
       status: "visible",
       tags: ["tag"],
@@ -101,7 +101,7 @@ describe Paradocs::Schema do
       variants: [{name: 'v1', sku: 'ABC', stock: '10', available_if_no_stock: true}]
     },
     {
-      title: 'iPhone 6 Plus',
+      article_title: 'iPhone 6 Plus',
       price: 100,
       status: 'visible',
       tags: ['tag1', 'tag2'],
@@ -114,7 +114,7 @@ describe Paradocs::Schema do
       variants: [{name: 'v1', available_if_no_stock: '1'}]
     },
     {
-      title: 'iPhone 6 Plus',
+      article_title: 'iPhone 6 Plus',
       variants: [{name: 'v1', stock: 1, available_if_no_stock: true}]
     })
 

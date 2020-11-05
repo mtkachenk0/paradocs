@@ -37,6 +37,10 @@ module Paradocs
       meta description: text
     end
 
+    def as(identifier)
+      meta alias: identifier
+    end
+
     def example(value)
       meta example: value
     end

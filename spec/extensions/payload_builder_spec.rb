@@ -22,7 +22,7 @@ describe Paradocs::Extensions::PayloadBuilder do
         end
         subschema(:fooschema) { }
         subschema(:barschema) do
-          field(:barfield).present.type(:boolean)
+          field(:barfield).present.type(:boolean).as(:bar_field)
         end
       end
     end
@@ -32,7 +32,7 @@ describe Paradocs::Extensions::PayloadBuilder do
     allow_any_instance_of(Array).to receive(:sample) { "bar" }
     payloads = described_class.new(schema).build!
     expect(payloads.keys.sort).to eq([:barschema, :fooschema, :subschema1, :subschema2_deep_schema, :subschema2_empty])
-    expect(payloads[:barschema]).to eq({"test" => nil, "foo" => {"bar" => "bar", "barfield" => nil}})
+    expect(payloads[:barschema]).to eq({"test" => nil, "foo" => {"bar" => "bar", "bar_field" => nil}})
     expect(payloads[:fooschema]).to eq({"test" => nil, "foo" => {"bar" => "bar"}})
     expect(payloads[:subschema1]).to eq({"test" => nil, "foo"  => {"bar" => "bar"}, "subtest1" => nil})
     expect(payloads[:subschema2_deep_schema]).to eq({
@@ -57,7 +57,7 @@ describe Paradocs::Extensions::PayloadBuilder do
     end
 
     expect(payloads.keys.sort).to eq([:barschema, :fooschema, :subschema1, :subschema2_deep_schema, :subschema2_empty])
-    expect(payloads[:barschema]).to eq({"test" => nil, "foo" => {"bar" => nil, "barfield" => true}}) # barfield is change to true and bar is nil
+    expect(payloads[:barschema]).to eq({"test" => nil, "foo" => {"bar" => nil, "bar_field" => true}}) # barfield is change to true and bar is nil
     expect(payloads[:fooschema]).to eq({"test" => nil, "foo" => {"bar" => nil}}) # bar is nil
     expect(payloads[:subschema1]).to eq({"test" => nil, "foo"  => {"bar" => nil}}) # subtest is missing, bar is nil
     expect(payloads[:subschema2_deep_schema]).to eq({

@@ -21,7 +21,8 @@ module Paradocs
           next if key.start_with?(Paradocs.config.meta_prefix) # skip all the meta fields
           ex_value = restore_one(key, value, &block)
           next if ex_value == @skip_word
-          [key, ex_value]
+          key = value[:alias] || key
+          [key.to_s, ex_value]
         end.compact.to_h
       end
 
