@@ -16,13 +16,13 @@ describe Paradocs::Struct do
       include Paradocs::Struct
 
       schema do
-        field(:title).type(:string).present
+        field(:title).type(:string).present.as(:example_title)
         field(:friends).type(:array).default([]).schema friend_class
       end
     end
 
     new_instance = klass.new
-    expect(new_instance.title).to eq ''
+    expect(new_instance.example_title).to eq ''
     expect(new_instance.friends).to eq []
     expect(new_instance.valid?).to be false
     expect(new_instance.errors['$.title']).not_to be_nil
@@ -35,7 +35,7 @@ describe Paradocs::Struct do
       ]
     })
 
-    expect(instance.title).to eq 'foo'
+    expect(instance.example_title).to eq 'foo'
     expect(instance.friends.size).to eq 2
     expect(instance.friends.first.name).to eq 'Ismael'
     expect(instance.friends.first).to be_a friend_class
@@ -154,7 +154,7 @@ describe Paradocs::Struct do
       schema do
         field(:title).type(:string).present
         field(:friends).type(:array).schema do
-          field(:name).type(:string)
+          field(:name).type(:string).as(:person_name)
           field(:age).type(:integer).default(20)
         end
       end
@@ -171,8 +171,8 @@ describe Paradocs::Struct do
     expect(instance.to_h).to eq({
       title: 'foo',
       friends: [
-        {name: 'Jane', age: 20},
-        {name: 'Joe', age: 39},
+        {person_name: 'Jane', age: 20},
+        {person_name: 'Joe', age: 39},
       ]
     })
 
@@ -190,7 +190,7 @@ describe Paradocs::Struct do
       include Paradocs::Struct
 
       schema do
-        field(:title).type(:string).present
+        field(:title).type(:string).present.as(:example_title)
         field(:friends).type(:array).schema do
           field(:name).type(:string)
           field(:age).type(:integer).default(20)
@@ -213,7 +213,7 @@ describe Paradocs::Struct do
       ]
     )
 
-    expect(instance.title).to eq 'foo'
+    expect(instance.example_title).to eq 'foo'
     expect(instance.email).to eq 'email@me.com'
     expect(instance.friends.size).to eq 2
   end
