@@ -73,16 +73,6 @@ module Paradocs
     end
   end
 
-  Paradocs.policy :split do
-    coerce do |v, k, c|
-      v.kind_of?(Array) ? v : v.to_s.split(/\s*,\s*/)
-    end
-
-    meta_data do
-      {type: :array}
-    end
-  end
-
   Paradocs.policy :datetime do
     coerce do |v, k, c|
       DateTime.parse(v.to_s)

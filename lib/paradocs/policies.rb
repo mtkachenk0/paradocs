@@ -5,7 +5,7 @@ module Paradocs
     class Format < Paradocs::BasePolicy
       attr_reader :message
 
-      def initialize(fmt, msg = "invalid format")
+      def initialize(fmt, msg="invalid format")
         @message = msg
         @fmt = fmt
       end
@@ -18,12 +18,23 @@ module Paradocs
         !payload.key?(key) || !!(value.to_s =~ @fmt)
       end
     end
+
+    class Split < Paradocs::BasePolicy
+      def initialize(delimiter=/\s*,\s*/)
+        @delimiter = delimiter
+      end
+
+      def coerce(v, *)
+        v.kind_of?(Array) ? v : v.to_s.split(@delimiter)
+      end
+    end
   end
 
   # Default validators
   EMAIL_REGEXP = /\A[\w+\-.]+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i.freeze
 
   Paradocs.policy :format, Policies::Format
+  Paradocs.policy :split, Policies::Split
   Paradocs.policy :email, Policies::Format.new(EMAIL_REGEXP, 'invalid email')
 
   Paradocs.policy :noop do
