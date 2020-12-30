@@ -81,7 +81,7 @@ describe 'custom block validator' do
 
       it "catches unregistered error and raises Configuration error" do
         expect { schema.resolve(age: 101).errors }.to raise_error(Paradocs::ConfigurationError)
-          .with_message("ZeroDivisionError should be registered in the policy")
+          .with_message("<ZeroDivisionError:divided by 0> should be registered in the policy")
       end
     end
   end

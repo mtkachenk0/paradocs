@@ -132,7 +132,11 @@ module Paradocs
         context.add_error e.message
       rescue StandardError => e
         raise e if policy.is_a? Paradocs::Schema # from the inner level, just reraise
-        raise ConfigurationError.new("#{e.class} should be registered in the policy") if Paradocs.config.explicit_errors
+        if Paradocs.config.explicit_errors
+          error = ConfigurationError.new("<#{e.class}:#{e.message}> should be registered in the policy")
+          error.set_backtrace(e.backtrace)
+          raise error
+        end
         context.add_error policy.message unless Paradocs.config.explicit_errors
         [value, false]
       end
