@@ -28,12 +28,12 @@ describe Paradocs::Struct do
     expect(new_instance.errors['$.title']).not_to be_nil
 
     instance = klass.new({
-      title: 'foo',
-      friends: [
-        {name: 'Ismael', age: 40},
-        {name: 'Joe', age: 39},
-      ]
-    })
+                           title: 'foo',
+                           friends: [
+                             { name: 'Ismael', age: 40 },
+                             { name: 'Joe', age: 39 }
+                           ]
+                         })
 
     expect(instance.example_title).to eq 'foo'
     expect(instance.friends.size).to eq 2
@@ -41,11 +41,11 @@ describe Paradocs::Struct do
     expect(instance.friends.first).to be_a friend_class
 
     invalid_instance = klass.new({
-      friends: [
-        {name: 'Ismael', age: 40},
-        {age: 39},
-      ]
-    })
+                                   friends: [
+                                     { name: 'Ismael', age: 40 },
+                                     { age: 39 }
+                                   ]
+                                 })
 
     expect(invalid_instance.valid?).to be false
     expect(invalid_instance.errors['$.title']).not_to be_nil
@@ -65,13 +65,13 @@ describe Paradocs::Struct do
     end
 
     instance = klass.new
-    expect {
+    expect do
       instance.title = 'foo'
-    }.to raise_error NoMethodError
+    end.to raise_error NoMethodError
 
-    expect {
+    expect do
       instance.friends << 1
-    }.to raise_error RuntimeError
+    end.to raise_error RuntimeError
   end
 
   it 'works with anonymous nested schemas' do
@@ -87,12 +87,12 @@ describe Paradocs::Struct do
     end
 
     instance = klass.new({
-      title: 'foo',
-      friends: [
-        {age: 10},
-        {age: 39},
-      ]
-    })
+                           title: 'foo',
+                           friends: [
+                             { age: 10 },
+                             { age: 39 }
+                           ]
+                         })
 
     expect(instance.title).to eq 'foo'
     expect(instance.friends.size).to eq 2
@@ -103,7 +103,7 @@ describe Paradocs::Struct do
     klass = Class.new do
       include Paradocs::Struct
 
-      def self.paradocs_build_class_for_child(key, child_schema)
+      def self.paradocs_build_class_for_child(_key, child_schema)
         Class.new do
           include Paradocs::Struct
           schema child_schema
@@ -121,7 +121,7 @@ describe Paradocs::Struct do
       end
     end
 
-    user = klass.new(name: 'Ismael', friends: [{age: 43}])
+    user = klass.new(name: 'Ismael', friends: [{ age: 43 }])
     expect(user.friends.first.salutation).to eq 'my age is 43'
   end
 
@@ -140,9 +140,9 @@ describe Paradocs::Struct do
     end
 
     instance = klass.new({
-      title: 'foo',
-      friends: [{name: 'Ismael'}]
-    })
+                           title: 'foo',
+                           friends: [{ name: 'Ismael' }]
+                         })
 
     expect(instance.friends.first.name).to eq 'Ismael'
   end
@@ -161,20 +161,20 @@ describe Paradocs::Struct do
     end
 
     instance = klass.new({
-      title: 'foo',
-      friends: [
-        {name: 'Jane'},
-        {name: 'Joe', age: '39'},
-      ]
-    })
+                           title: 'foo',
+                           friends: [
+                             { name: 'Jane' },
+                             { name: 'Joe', age: '39' }
+                           ]
+                         })
 
     expect(instance.to_h).to eq({
-      title: 'foo',
-      friends: [
-        {person_name: 'Jane', age: 20},
-        {person_name: 'Joe', age: 39},
-      ]
-    })
+                                  title: 'foo',
+                                  friends: [
+                                    { person_name: 'Jane', age: 20 },
+                                    { person_name: 'Joe', age: 39 }
+                                  ]
+                                })
 
     new_instance = klass.new(instance.to_h)
     expect(new_instance.title).to eq 'foo'
@@ -208,8 +208,8 @@ describe Paradocs::Struct do
       title: 'foo',
       email: 'email@me.com',
       friends: [
-        {name: 'Jane', age: 20},
-        {name: 'Joe', age: 39},
+        { name: 'Jane', age: 20 },
+        { name: 'Joe', age: 39 }
       ]
     )
 
@@ -231,37 +231,36 @@ describe Paradocs::Struct do
     end
 
     s1 = klass.new({
-      title: 'foo',
-      friends: [
-        {age: 10},
-        {age: 39},
-      ]
-    })
-
+                     title: 'foo',
+                     friends: [
+                       { age: 10 },
+                       { age: 39 }
+                     ]
+                   })
 
     s2 = klass.new({
-      title: 'foo',
-      friends: [
-        {age: 10},
-        {age: 39},
-      ]
-    })
+                     title: 'foo',
+                     friends: [
+                       { age: 10 },
+                       { age: 39 }
+                     ]
+                   })
 
     s3 = klass.new({
-      title: 'foo',
-      friends: [
-        {age: 11},
-        {age: 39},
-      ]
-    })
+                     title: 'foo',
+                     friends: [
+                       { age: 11 },
+                       { age: 39 }
+                     ]
+                   })
 
     s4 = klass.new({
-      title: 'bar',
-      friends: [
-        {age: 10},
-        {age: 39},
-      ]
-    })
+                     title: 'bar',
+                     friends: [
+                       { age: 10 },
+                       { age: 39 }
+                     ]
+                   })
 
     expect(s1 == s2).to be true
     expect(s1 == s3).to be false
@@ -284,12 +283,12 @@ describe Paradocs::Struct do
     original = klass.new(
       title: 'foo',
       desc: 'no change',
-      friends: [{name: 'joe'}]
+      friends: [{ name: 'joe' }]
     )
 
     copy = original.merge(
       title: 'bar',
-      friends: [{name: 'jane'}]
+      friends: [{ name: 'jane' }]
     )
 
     expect(original.title).to eq 'foo'

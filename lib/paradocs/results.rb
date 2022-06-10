@@ -3,7 +3,9 @@ module Paradocs
     attr_reader :output, :errors, :environment
 
     def initialize(output, errors, environment)
-      @output, @errors, @environment = output, errors, environment
+      @output = output
+      @errors = errors
+      @environment = environment
     end
 
     def valid?

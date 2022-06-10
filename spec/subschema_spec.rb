@@ -1,13 +1,13 @@
 require 'spec_helper'
-require "paradocs/dsl"
+require 'paradocs/dsl'
 
-describe "schemes with subschemes" do
+describe 'schemes with subschemes' do
   let(:validation_class) do
     Class.new do
       include Paradocs::DSL
 
       schema(:request) do
-        field(:action).present.options([:update, :delete]).mutates_schema! do |action, *|
+        field(:action).present.options(%i[update delete]).mutates_schema! do |action, *|
           action == :update ? :update_schema : :generic_schema
         end
 
@@ -26,28 +26,28 @@ describe "schemes with subschemes" do
     end
   end
 
-  let(:update_request) {
+  let(:update_request) do
     {
       action: :update,
-      event:  "test"
+      event: 'test'
     }
-  }
+  end
 
-  it "invokes necessary subschema based on condition" do
+  it 'invokes necessary subschema based on condition' do
     valid_result = validation_class.validate(:request, update_request)
     expect(valid_result.output).to eq(update_request)
     expect(valid_result.errors).to eq({})
 
-    failed_result = validation_class.validate(:request, {action: :update, generic_field: "test"})
+    failed_result = validation_class.validate(:request, { action: :update, generic_field: 'test' })
 
-    expect(failed_result.errors).to eq({"$.event"=>["is required"]})
-    expect(failed_result.output).to eq({action: :update, event: nil})
+    expect(failed_result.errors).to eq({ '$.event' => ['is required'] })
+    expect(failed_result.output).to eq({ action: :update, event: nil })
   end
 
-  describe "ghost fields" do
+  describe 'ghost fields' do
     let(:schema) do
       Paradocs::Schema.new do
-        mutation_by!(:error) do |value, key, *args|
+        mutation_by!(:error) do |value, _key, *_args|
           value.nil? ? :success : :fail
         end
 
@@ -64,32 +64,32 @@ describe "schemes with subschemes" do
       structure = {
         _errors: [],
         _subschemes: {
-          fail:    {_errors: [], _subschemes: {}, fail_field: {required: true, present: true, json_path: "$.fail_field", nested_name: "fail_field"}},
-          success: {_errors: [], _subschemes: {}, success_field: {required: true, present: true, json_path: "$.success_field", nested_name: "success_field"}}
+          fail: { _errors: [], _subschemes: {}, fail_field: { required: true, present: true, json_path: '$.fail_field', nested_name: 'fail_field' } },
+          success: { _errors: [], _subschemes: {}, success_field: { required: true, present: true, json_path: '$.success_field', nested_name: 'success_field' } }
         }
       }
-      result = schema.resolve({error: :here})
-      expect(result.errors).to    eq({"$.fail_field"=>["is required"]})
-      expect(result.output).to    eq({error: :here, fail_field: nil})
+      result = schema.resolve({ error: :here })
+      expect(result.errors).to    eq({ '$.fail_field' => ['is required'] })
+      expect(result.output).to    eq({ error: :here, fail_field: nil })
       expect(schema.structure.nested).to eq(structure)
       expect(schema.structure(ignore_transparent: false).nested).to eq(structure.merge(
-        error: {transparent: true, mutates_schema: true, json_path: "$.error", nested_name: "error"}
-      ))
+                                                                         error: { transparent: true, mutates_schema: true, json_path: '$.error', nested_name: 'error' }
+                                                                       ))
 
       result = schema.resolve({})
-      expect(result.errors).to eq({"$.success_field"=>["is required"]})
-      expect(result.output).to eq({success_field: nil})
+      expect(result.errors).to eq({ '$.success_field' => ['is required'] })
+      expect(result.output).to eq({ success_field: nil })
       expect(schema.structure.nested).to eq(structure)
       expect(schema.structure(ignore_transparent: false).nested).to eq(structure.merge(
-        error: {transparent: true, mutates_schema: true, json_path: "$.error", nested_name: "error"}
-      ))
+                                                                         error: { transparent: true, mutates_schema: true, json_path: '$.error', nested_name: 'error' }
+                                                                       ))
     end
   end
 
-  describe "nested subschemes" do
+  describe 'nested subschemes' do
     let(:schema) do
       Paradocs::Schema.new do
-        field(:action).present.options([:update, :delete]).mutates_schema! do |value, key, payload|
+        field(:action).present.options(%i[update delete]).mutates_schema! do |value, _key, _payload|
           value == :update ? :update_schema : :generic_schema
         end
         field(:event).declared.type(:string)
@@ -99,7 +99,7 @@ describe "schemes with subschemes" do
         end
 
         subschema(:update_schema) do
-          field(:event).present.mutates_schema! do |value, key, payload|
+          field(:event).present.mutates_schema! do |value, _key, _payload|
             value == :go_deeper ? :very_deep_schema : :deep_update_schema
           end
           field(:update_field).present
@@ -119,59 +119,59 @@ describe "schemes with subschemes" do
       end
     end
 
-    context "update_schema -> deep_update_schema" do
-      let(:payload) {
+    context 'update_schema -> deep_update_schema' do
+      let(:payload) do
         {
-          action:                 :update,
-          event:                  :must_be_present,
-          update_field:           1,
+          action: :update,
+          event: :must_be_present,
+          update_field: 1,
           field_from_deep_schema: nil
         }
-      }
+      end
 
-      it "builds schema as expected" do
+      it 'builds schema as expected' do
         result = schema.resolve(payload)
         expect(result.output).to eq(payload)
         expect(result.errors).to eq({})
       end
 
-      it "fails when validation fails in subschemas" do
+      it 'fails when validation fails in subschemas' do
         result = schema.resolve(payload.merge(action: :delete))
-        expect(result.output).to eq(action: :delete, event: "must_be_present", generic_field: nil)
-        expect(result.errors).to eq("$.generic_field"=>["is required"])
+        expect(result.output).to eq(action: :delete, event: 'must_be_present', generic_field: nil)
+        expect(result.errors).to eq('$.generic_field' => ['is required'])
       end
 
-      it "overwrites fields: subschema field overwrites parent field" do
+      it 'overwrites fields: subschema field overwrites parent field' do
         payload.delete(:event)
         result = schema.resolve(payload)
       end
     end
 
-    context "update_schema -> very_deep_schema -> draft_subschema" do
-      let(:payload) {
+    context 'update_schema -> very_deep_schema -> draft_subschema' do
+      let(:payload) do
         {
-          action:         :update,
-          event:          :go_deeper,
-          update_field:   1,
-          a_hash:       {
-            key:           :value,
+          action: :update,
+          event: :go_deeper,
+          update_field: 1,
+          a_hash: {
+            key: :value,
             another_event: true
           }
         }
-      }
+      end
 
-      it "builds schema as expected"  do
+      it 'builds schema as expected'  do
         result = schema.resolve(payload)
         expect(result.output).to eq(payload)
         expect(result.errors).to eq({})
       end
 
       it "fails when payload doesn't suit just built schema" do
-        payload[:a_hash] = {key: :random}
+        payload[:a_hash] = { key: :random }
         result = schema.resolve(payload)
         payload[:a_hash][:another_event] = nil
         expect(result.output).to eq(payload)
-        expect(result.errors).to eq({"$.a_hash.another_event"=>["is required"]})
+        expect(result.errors).to eq({ '$.a_hash.another_event' => ['is required'] })
       end
     end
   end

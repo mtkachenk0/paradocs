@@ -1,11 +1,11 @@
-require "paradocs/version"
-require "paradocs/support"
-require "paradocs/registry"
-require "paradocs/field"
-require "paradocs/results"
-require "paradocs/schema"
-require "paradocs/context"
-require "paradocs/base_policy"
+require 'paradocs/version'
+require 'paradocs/support'
+require 'paradocs/registry'
+require 'paradocs/field'
+require 'paradocs/results'
+require 'paradocs/schema'
+require 'paradocs/context'
+require 'paradocs/base_policy'
 require 'ostruct'
 
 module Paradocs
@@ -19,17 +19,17 @@ module Paradocs
 
   def self.config
     @config ||= OpenStruct.new(
-      explicit_errors:     false,
-      whitelisted_keys:    [],
+      explicit_errors: false,
+      whitelisted_keys: [],
       default_schema_name: :schema,
-      meta_prefix:         "_",
-      whitelist_coercion:  nil
+      meta_prefix: '_',
+      whitelist_coercion: nil
     )
   end
 
   def self.configure
-    yield self.config if block_given?
-    self.config
+    yield config if block_given?
+    config
   end
 end
 

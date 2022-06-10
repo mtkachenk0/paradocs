@@ -32,7 +32,7 @@ module Paradocs
       @meta_data_block
     end
 
-    %w(error silent_error).each do |name|
+    %w[error silent_error].each do |name|
       getter = "#{name}s"
       define_singleton_method(getter) do
         parent_errors = superclass.respond_to?(getter) ? superclass.send(getter) : []
@@ -49,9 +49,10 @@ module Paradocs
             next
           end
           next unless ex.is_a?(Class) || ex < StandardError
+
           only_errors << ex
         end
-        instance_variable_set("@#{getter}", ((self.public_send(getter) || []) + only_errors).uniq)
+        instance_variable_set("@#{getter}", ((public_send(getter) || []) + only_errors).uniq)
       end
 
       define_method(getter) do
@@ -59,12 +60,12 @@ module Paradocs
       end
     end
 
-    def self.policy_name=(name)
-      @policy_name = name
+    class << self
+      attr_writer :policy_name
     end
 
     def self.policy_name
-      @policy_name || self.name.split("::").last.downcase.to_sym
+      @policy_name || name.split('::').last.downcase.to_sym
     end
 
     attr_accessor :environment
@@ -89,6 +90,7 @@ module Paradocs
 
     def meta_data
       return self.class.meta_data.call(*init_params) if self.class.meta_data
+
       meta
     end
 
@@ -97,7 +99,7 @@ module Paradocs
     end
 
     def policy_name
-      (self.class.policy_name || self.to_s.demodulize.underscore).to_sym
+      (self.class.policy_name || to_s.demodulize.underscore).to_sym
     end
 
     def message
@@ -107,13 +109,13 @@ module Paradocs
     protected
 
     def validate(*args)
-      (self.class.validate || ->(*args) { true }).call(*args)
+      (self.class.validate || ->(*_args) { true }).call(*args)
     end
 
     private
 
     def meta
-      @meta = {self.class.policy_name => {errors: self.class.errors}}
+      @meta = { self.class.policy_name => { errors: self.class.errors } }
     end
 
     def init_params

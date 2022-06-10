@@ -1,14 +1,14 @@
-require "paradocs/context"
-require "paradocs/results"
-require "paradocs/field"
-require "paradocs/extensions/structure"
-require "paradocs/extensions/payload_builder"
+require 'paradocs/context'
+require 'paradocs/results'
+require 'paradocs/field'
+require 'paradocs/extensions/structure'
+require 'paradocs/extensions/payload_builder'
 
 module Paradocs
   class Schema
     attr_accessor :environment
     attr_reader :subschemes, :structure_builder
-    def initialize(options={}, &block)
+    def initialize(options = {}, &block)
       @options = options
       @fields = {}
       @subschemes = {}
@@ -55,14 +55,14 @@ module Paradocs
       name = args.first.is_a?(Symbol) ? args.shift : Paradocs.config.default_schema_name
       current_schema = subschemes.fetch(name) { self.class.new }
       new_schema = if block_given?
-        sc = self.class.new(options)
-        sc.definitions << block
-        sc
-      elsif args.first.is_a?(self.class)
-        args.first
-      else
-        self.class.new(options)
-      end
+                     sc = self.class.new(options)
+                     sc.definitions << block
+                     sc
+                   elsif args.first.is_a?(self.class)
+                     args.first
+                   else
+                     self.class.new(options)
+                   end
       subschemes[name] = current_schema.merge(new_schema)
     end
 
@@ -108,16 +108,16 @@ module Paradocs
 
       subschemes.each { |name, subsc| instance.subschema(name, subsc) }
 
-      instance.ignore *ignored_field_keys
+      instance.ignore(*ignored_field_keys)
       instance
     end
 
     def field(field_or_key)
-      f, key = if field_or_key.kind_of?(Field)
-        [field_or_key, field_or_key.key]
-      else
-        [Field.new(field_or_key), field_or_key.to_sym]
-      end
+      f, key = if field_or_key.is_a?(Field)
+                 [field_or_key, field_or_key.key]
+               else
+                 [Field.new(field_or_key), field_or_key.to_sym]
+               end
 
       if ignored_field_keys.include?(f.key)
         f
@@ -131,14 +131,14 @@ module Paradocs
       self
     end
 
-    def resolve(payload, environment={})
+    def resolve(payload, environment = {})
       @environment = environment
       context = Context.new(nil, Top.new, @environment, subschemes)
       output = coerce(payload, nil, context)
       Results.new(output, context.errors, @environment)
     end
 
-    def eligible?(value, key, payload)
+    def eligible?(_value, key, payload)
       payload.key? key
     end
 
@@ -191,10 +191,12 @@ module Paradocs
       # recoursive definitions call depending on payload
       flds.clone.each_pair do |_, field|
         next unless field.expects_mutation?
+
         subschema_name = field.subschema_for_mutation(payload, context.environment)
         subschema = subschemes[subschema_name] || context.subschema(subschema_name)
         next unless subschema # or may be raise error?
-        subschema.definitions.each { |block| self.instance_exec(&block) }
+
+        subschema.definitions.each { |block| instance_exec(&block) }
         invoked_any = true
       end
       # if definitions are applied new subschemes may appear, apply them until they end
@@ -212,9 +214,11 @@ module Paradocs
         payload.each do |key, value|
           match = exp.match(key.to_s)
           next unless match
+
           fld = MatchContext.new.instance_exec(match, &block)
           next unless fld
-          into.update(coerce_one({fld.key => value}, context, flds: {fld.key => apply_default_field_policies_to(fld)}))
+
+          into.update(coerce_one({ fld.key => value }, context, flds: { fld.key => apply_default_field_policies_to(fld) }))
         end
       end
 
@@ -222,13 +226,14 @@ module Paradocs
     end
 
     def apply_default_field_policies_to(field)
-      default_field_policies.reduce(field) {|f, policy_name| f.policy(policy_name) }
+      default_field_policies.reduce(field) { |f, policy_name| f.policy(policy_name) }
     end
 
     def apply!
       return if @applied
+
       definitions.each do |d|
-        self.instance_exec(options, &d)
+        instance_exec(options, &d)
       end
       @applied = true
     end

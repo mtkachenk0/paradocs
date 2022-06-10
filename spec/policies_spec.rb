@@ -9,7 +9,7 @@ describe 'default coercions' do
   describe ':datetime' do
     it {
       coercion = Paradocs.registry.coercions[:datetime]
-      coercion.new.coerce("2016-11-05T14:23:34Z", nil, nil).tap do |d|
+      coercion.new.coerce('2016-11-05T14:23:34Z', nil, nil).tap do |d|
         expect(d).to be_a Date
         expect(d.year).to eq 2016
         expect(d.month).to eq 11
@@ -17,7 +17,7 @@ describe 'default coercions' do
         expect(d.hour).to eq 14
         expect(d.minute).to eq 23
         expect(d.second).to eq 34
-        expect(d.zone).to eq "+00:00"
+        expect(d.zone).to eq '+00:00'
       end
     }
   end
@@ -63,97 +63,97 @@ describe 'default coercions' do
 
   describe ':split' do
     it {
-      test_coercion(:split, 'aaa,bb,cc', ['aaa', 'bb', 'cc'])
-      test_coercion(:split, 'aaa ,bb,  cc', ['aaa', 'bb', 'cc'])
+      test_coercion(:split, 'aaa,bb,cc', %w[aaa bb cc])
+      test_coercion(:split, 'aaa ,bb,  cc', %w[aaa bb cc])
       test_coercion(:split, 'aaa', ['aaa'])
-      test_coercion(:split, ['aaa', 'bb', 'cc'], ['aaa', 'bb', 'cc'])
+      test_coercion(:split, %w[aaa bb cc], %w[aaa bb cc])
     }
   end
 
   describe ':gt' do
     it "passes the value if it's greater than policy param" do
-      expected_policy_behavior(policy: :gt, policy_args: [3], input: {a: 4}, output: {a: 4})
+      expected_policy_behavior(policy: :gt, policy_args: [3], input: { a: 4 }, output: { a: 4 })
     end
 
-    it "raises error if value is greater to policy param" do
-      errors  = {"$.a"=>["value must be strictly greater than 10"]}
-      errors2 = {"$.a"=>["value must be strictly greater than 10"]}
-      expected_policy_behavior(policy: :gt, policy_args: [10], input: {a: 4}, errors: errors)
-      expected_policy_behavior(policy: :gt, policy_args: [10], input: {a: 10}, errors: errors2)
+    it 'raises error if value is greater to policy param' do
+      errors  = { '$.a' => ['value must be strictly greater than 10'] }
+      errors2 = { '$.a' => ['value must be strictly greater than 10'] }
+      expected_policy_behavior(policy: :gt, policy_args: [10], input: { a: 4 }, errors: errors)
+      expected_policy_behavior(policy: :gt, policy_args: [10], input: { a: 10 }, errors: errors2)
     end
   end
 
   describe ':gte' do
     it "passes the value if it's greater or equal to policy param" do
-      expected_policy_behavior(policy: :gte, policy_args: [3], input: {a: 4}, output: {a: 4})
-      expected_policy_behavior(policy: :gte, policy_args: [3], input: {a: 3}, output: {a: 3})
+      expected_policy_behavior(policy: :gte, policy_args: [3], input: { a: 4 }, output: { a: 4 })
+      expected_policy_behavior(policy: :gte, policy_args: [3], input: { a: 3 }, output: { a: 3 })
     end
 
-    it "raises error if value is greater than policy param" do
-      errors = {"$.a"=>["value must be greater than or equal to 10"]}
-      expected_policy_behavior(policy: :gte, policy_args: [10], input: {a: 4}, errors: errors)
+    it 'raises error if value is greater than policy param' do
+      errors = { '$.a' => ['value must be greater than or equal to 10'] }
+      expected_policy_behavior(policy: :gte, policy_args: [10], input: { a: 4 }, errors: errors)
     end
   end
 
   describe ':lt' do
     it "passes the value if it's less to policy param" do
-      expected_policy_behavior(policy: :lt, policy_args: [100], input: {a: 4}, output: {a: 4})
+      expected_policy_behavior(policy: :lt, policy_args: [100], input: { a: 4 }, output: { a: 4 })
     end
 
-    it "raises error if value is strictly less to policy param" do
-      errors  = {"$.a"=>["value must be strictly less than 10"]}
-      errors2 = {"$.a"=>["value must be strictly less than 10"]}
-      expected_policy_behavior(policy: :lt, policy_args: [10], input: {a: 40}, errors: errors)
-      expected_policy_behavior(policy: :lt, policy_args: [10], input: {a: 10}, errors: errors2)
+    it 'raises error if value is strictly less to policy param' do
+      errors  = { '$.a' => ['value must be strictly less than 10'] }
+      errors2 = { '$.a' => ['value must be strictly less than 10'] }
+      expected_policy_behavior(policy: :lt, policy_args: [10], input: { a: 40 }, errors: errors)
+      expected_policy_behavior(policy: :lt, policy_args: [10], input: { a: 10 }, errors: errors2)
     end
   end
 
   describe ':lte' do
     it "passes the value if it's less or equal to policy param" do
-      expected_policy_behavior(policy: :lte, policy_args: [100], input: {a: 4}, output: {a: 4})
-      expected_policy_behavior(policy: :lte, policy_args: [100], input: {a: 100}, output: {a: 100})
+      expected_policy_behavior(policy: :lte, policy_args: [100], input: { a: 4 }, output: { a: 4 })
+      expected_policy_behavior(policy: :lte, policy_args: [100], input: { a: 100 }, output: { a: 100 })
     end
 
-    it "raises error if value is less or equal than policy param" do
-      errors = {"$.a"=>["value must be less than or equal to 1"]}
-      expected_policy_behavior(policy: :lte, policy_args: [1], input: {a: 40}, output: {a: 40}, errors: errors)
+    it 'raises error if value is less or equal than policy param' do
+      errors = { '$.a' => ['value must be less than or equal to 1'] }
+      expected_policy_behavior(policy: :lte, policy_args: [1], input: { a: 40 }, output: { a: 40 }, errors: errors)
     end
   end
 
   describe ':length' do
     it "passes the value if it's between min and max limits" do
-      expected_policy_behavior(policy: :length, policy_args: [{min: 5, max: 20}], input: {a: "string"}, output: {a: "string"})
-      expected_policy_behavior(policy: :length, policy_args: [{min: 5}], input: {a: "string"}, output: {a: "string"})
-      expected_policy_behavior(policy: :length, policy_args: [{max: 20}], input: {a: "string"}, output: {a: "string"})
+      expected_policy_behavior(policy: :length, policy_args: [{ min: 5, max: 20 }], input: { a: 'string' }, output: { a: 'string' })
+      expected_policy_behavior(policy: :length, policy_args: [{ min: 5 }], input: { a: 'string' }, output: { a: 'string' })
+      expected_policy_behavior(policy: :length, policy_args: [{ max: 20 }], input: { a: 'string' }, output: { a: 'string' })
     end
 
     it "passes the value if it's exactly :eq limit" do
-      expected_policy_behavior(policy: :length, policy_args: [{eq: 5}], input: {a: "12345"}, output: {a: "12345"})
+      expected_policy_behavior(policy: :length, policy_args: [{ eq: 5 }], input: { a: '12345' }, output: { a: '12345' })
     end
 
-    it "raises error if value is not exactly than defined :eq limit" do
-      errors = {"$.a"=>["value must be exactly 10 characters"]}
-      expected_policy_behavior(policy: :length, policy_args: [{eq: 10}], input: {a: "test"}, output: {a: "test"}, errors: errors)
+    it 'raises error if value is not exactly than defined :eq limit' do
+      errors = { '$.a' => ['value must be exactly 10 characters'] }
+      expected_policy_behavior(policy: :length, policy_args: [{ eq: 10 }], input: { a: 'test' }, output: { a: 'test' }, errors: errors)
     end
 
-    it "raises error if value is less than min limit" do
-      errors = {"$.a"=>["value must be minimum 10 characters"]}
-      expected_policy_behavior(policy: :length, policy_args: [{min: 10}], input: {a: "test"}, output: {a: "test"}, errors: errors)
+    it 'raises error if value is less than min limit' do
+      errors = { '$.a' => ['value must be minimum 10 characters'] }
+      expected_policy_behavior(policy: :length, policy_args: [{ min: 10 }], input: { a: 'test' }, output: { a: 'test' }, errors: errors)
     end
 
-    it "raises error if value is greater than max limit" do
-      errors = {"$.a"=>["value must be maximum 3 characters"]}
-      expected_policy_behavior(policy: :length, policy_args: [{max: 3}], input: {a: "test"}, output: {a: "test"}, errors: errors)
+    it 'raises error if value is greater than max limit' do
+      errors = { '$.a' => ['value must be maximum 3 characters'] }
+      expected_policy_behavior(policy: :length, policy_args: [{ max: 3 }], input: { a: 'test' }, output: { a: 'test' }, errors: errors)
     end
 
-    it "raises error with full description if value is less than min limit" do
-      errors = {"$.a"=>["value must be minimum 10 characters, maximum 20 characters"]}
-      expected_policy_behavior(policy: :length, policy_args: [{min: 10, max: 20}], input: {a: "test"}, output: {a: "test"}, errors: errors)
+    it 'raises error with full description if value is less than min limit' do
+      errors = { '$.a' => ['value must be minimum 10 characters, maximum 20 characters'] }
+      expected_policy_behavior(policy: :length, policy_args: [{ min: 10, max: 20 }], input: { a: 'test' }, output: { a: 'test' }, errors: errors)
     end
 
-    it "raises error with full description if value is greater than max limit" do
-      errors = {"$.a"=>["value must be minimum 3 characters, maximum 5 characters"]}
-      expected_policy_behavior(policy: :length, policy_args: [{min: 3, max: 5}], input: {a: "test_test"}, output: {a: "test_test"}, errors: errors)
+    it 'raises error with full description if value is greater than max limit' do
+      errors = { '$.a' => ['value must be minimum 3 characters, maximum 5 characters'] }
+      expected_policy_behavior(policy: :length, policy_args: [{ min: 3, max: 5 }], input: { a: 'test_test' }, output: { a: 'test_test' }, errors: errors)
     end
   end
 end
