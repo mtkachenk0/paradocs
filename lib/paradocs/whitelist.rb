@@ -16,8 +16,8 @@ module Paradocs
     #   params = {title: "title", age: 25}
     #   foo.filter!(params, schema) # => {title: "title", age: "[FILTERED]"}
     #
-    FILTERED = "[FILTERED]"
-    EMPTY    = "[EMPTY]"
+    FILTERED = '[FILTERED]'.freeze
+    EMPTY    = '[EMPTY]'.freeze
 
     def self.included(base)
       base.include(ClassMethods)
@@ -56,12 +56,12 @@ module Paradocs
           else
 
             value = if whitelisted?(meta, key)
-              coercion_block ? coercion_block.call(value, meta) : value
-            elsif value.nil? || value.try(:blank?) || value.try(:empty?)
-              !!value == value ? value : EMPTY
-            else
-              FILTERED
-            end
+                      coercion_block ? coercion_block.call(value, meta) : value
+                    elsif value.nil? || value.try(:blank?) || value.try(:empty?)
+                      !!value == value ? value : EMPTY
+                    else
+                      FILTERED
+                    end
             value
           end
           filtered_payload[key] = value
@@ -85,6 +85,7 @@ module Paradocs
         return {} unless schema.respond_to?(:fields)
         return {} unless schema.fields[key]
         return {} unless schema.fields[key].respond_to?(:meta_data)
+
         meta_data = schema.fields[key].meta_data || {}
       end
     end

@@ -14,7 +14,7 @@ module Paradocs
 
   class Context
     attr_reader :environment
-    def initialize(path=nil, top=Top.new, environment={}, subschemes={})
+    def initialize(path = nil, top = Top.new, environment = {}, subschemes = {})
       @top = top
       @path = Array(path).compact
       @environment = environment
@@ -24,6 +24,7 @@ module Paradocs
     def subschema(subschema_name)
       subschema = @subschemes[subschema_name]
       return unless subschema
+
       @subschemes.merge!(subschema.subschemes)
       subschema
     end
@@ -41,14 +42,13 @@ module Paradocs
     end
 
     protected
+
     attr_reader :path, :top
 
     def string_path
-      path.reduce(['$']) do |m, segment|
+      path.each_with_object(['$']) do |segment, m|
         m << (segment.is_a?(Integer) ? "[#{segment}]" : ".#{segment}")
-        m
       end.join
     end
   end
-
 end

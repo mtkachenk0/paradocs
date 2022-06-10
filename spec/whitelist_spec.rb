@@ -1,8 +1,8 @@
 require 'spec_helper'
-require "paradocs/whitelist"
-require "paradocs/dsl"
+require 'paradocs/whitelist'
+require 'paradocs/dsl'
 
-describe "classes including Whitelist module" do
+describe 'classes including Whitelist module' do
   class TestWhitelist
     include Paradocs::DSL
     include Paradocs::Whitelist
@@ -36,57 +36,57 @@ describe "classes including Whitelist module" do
     end
   end
 
-  describe ".filter!" do
+  describe '.filter!' do
     let(:schema) { TestWhitelist.schema(:request) }
-    let(:input) {
+    let(:input) do
       {
-        "unexpected" => "test",
-        from_config: "whitelisted",
+        'unexpected' => 'test',
+        from_config: 'whitelisted',
         data: [
-          "id" => 5,
+          'id' => 5,
           name: nil,
           unexpected: nil,
           empty_array: [],
-          subschema_1: "subfield_1",
+          subschema_1: 'subfield_1',
           subfield_1: true,
-          subschema_2: "subfield_2",
+          subschema_2: 'subfield_2',
           subfield_2: true,
           empty_hash: {},
-          "extra" => {
+          'extra' => {
             id: 6,
-            name: "name",
-            unexpected: "unexpected",
-            empty_string: ""
+            name: 'name',
+            unexpected: 'unexpected',
+            empty_string: ''
           }
         ]
       }
-    }
+    end
 
-    before { Paradocs.config.whitelisted_keys = [:from_config]}
+    before { Paradocs.config.whitelisted_keys = [:from_config] }
 
     it "should filter not whitelisted attributes with different key's type" do
       whitelisted = TestWhitelist.new.filter!(input, schema)
 
       expect(whitelisted).to eq(
         {
-          unexpected: "[FILTERED]",
-          from_config: "whitelisted",
+          unexpected: '[FILTERED]',
+          from_config: 'whitelisted',
           data: [
             {
               id: 5,
-              name: "[EMPTY]",
-              unexpected: "[EMPTY]",
+              name: '[EMPTY]',
+              unexpected: '[EMPTY]',
               empty_array: [],
-              subschema_1: "subfield_1",
+              subschema_1: 'subfield_1',
               subfield_1: true,
-              subschema_2: "[FILTERED]",
+              subschema_2: '[FILTERED]',
               subfield_2: true,
               empty_hash: {},
               extra: {
                 id: 6,
-                name: "[FILTERED]",
-                unexpected: "[FILTERED]",
-                empty_string: "[EMPTY]"
+                name: '[FILTERED]',
+                unexpected: '[FILTERED]',
+                empty_string: '[EMPTY]'
               }
             }
           ]
@@ -94,31 +94,31 @@ describe "classes including Whitelist module" do
       )
     end
 
-    context "when Paradocs.config.whitelist_coercion block is set" do
-      before { Paradocs.config.whitelist_coercion = Proc.new { |value, meta| meta[:type] != :string ? "FILTER" : value.to_s }}
+    context 'when Paradocs.config.whitelist_coercion block is set' do
+      before { Paradocs.config.whitelist_coercion = proc { |value, meta| meta[:type] != :string ? 'FILTER' : value.to_s } }
 
-      it "executes block for each value" do
+      it 'executes block for each value' do
         whitelisted = TestWhitelist.new.filter!(input, schema)
         expect(whitelisted).to eq(
           {
-            unexpected: "[FILTERED]",
-            from_config: "FILTER",
+            unexpected: '[FILTERED]',
+            from_config: 'FILTER',
             data: [
               {
-                id: "5",
-                name: "[EMPTY]",
-                unexpected: "[EMPTY]",
+                id: '5',
+                name: '[EMPTY]',
+                unexpected: '[EMPTY]',
                 empty_array: [],
-                subschema_1: "FILTER",
-                subfield_1: "FILTER",
-                subschema_2: "[FILTERED]",
-                subfield_2: "FILTER",
+                subschema_1: 'FILTER',
+                subfield_1: 'FILTER',
+                subschema_2: '[FILTERED]',
+                subfield_2: 'FILTER',
                 empty_hash: {},
                 extra: {
-                  id: "6",
-                  name: "[FILTERED]",
-                  unexpected: "[FILTERED]",
-                  empty_string: "[EMPTY]"
+                  id: '6',
+                  name: '[FILTERED]',
+                  unexpected: '[FILTERED]',
+                  empty_string: '[EMPTY]'
                 }
               }
             ]

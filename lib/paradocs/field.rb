@@ -1,4 +1,4 @@
-require "paradocs/field_dsl"
+require 'paradocs/field_dsl'
 
 module Paradocs
   class Field
@@ -28,12 +28,12 @@ module Paradocs
 
     def default(value)
       meta default: value
-      @default_block = (value.respond_to?(:call) ? value : ->(key, payload, context) { value })
+      @default_block = (value.respond_to?(:call) ? value : ->(_key, _payload, _context) { value })
       self
     end
 
     def mutates_schema!(&block)
-      @mutation_block   ||= block if block_given?
+      @mutation_block ||= block if block_given?
       @expects_mutation = @expects_mutation.nil? && true
       meta mutates_schema: @mutation_block
       @mutation_block
@@ -55,11 +55,11 @@ module Paradocs
       self
     end
 
-    alias_method :type, :policy
-    alias_method :rule, :policy
+    alias type policy
+    alias rule policy
 
     def schema(sc = nil, &block)
-      sc = (sc ? sc : Schema.new(&block))
+      sc = (sc || Schema.new(&block))
       meta schema: sc
       policy sc.schema
     end
@@ -71,7 +71,7 @@ module Paradocs
     def visit(meta_key = nil, &visitor)
       if sc = meta_data[:schema]
         r = sc.visit(meta_key, &visitor)
-        (meta_data[:type] == :array) ? [r] : r
+        meta_data[:type] == :array ? [r] : r
       else
         meta_key ? meta_data[meta_key] : yield(self)
       end
@@ -116,30 +116,30 @@ module Paradocs
     end
 
     private
+
     attr_reader :policies, :default_block
 
     def resolve_one(policy, value, payload, context)
-      begin
-        value = policy.coerce(value, key, context)
-        valid = policy.valid?(value, key, payload)
+      value = policy.coerce(value, key, context)
+      valid = policy.valid?(value, key, payload)
 
-        context.add_error(policy.message) unless valid
-        [value, valid]
-      rescue *(policy.try(:errors) || []) => e
-        # context.add_error e.message # NOTE: do we need it?
-        raise e
-      rescue *(policy.try(:silent_errors) || []) => e
-        context.add_error e.message
-      rescue StandardError => e
-        raise e if policy.is_a? Paradocs::Schema # from the inner level, just reraise
-        if Paradocs.config.explicit_errors
-          error = ConfigurationError.new("<#{e.class}:#{e.message}> should be registered in the policy")
-          error.set_backtrace(e.backtrace)
-          raise error
-        end
-        context.add_error policy.message unless Paradocs.config.explicit_errors
-        [value, false]
+      context.add_error(policy.message) unless valid
+      [value, valid]
+    rescue *(policy.try(:errors) || []) => e
+      # context.add_error e.message # NOTE: do we need it?
+      raise e
+    rescue *(policy.try(:silent_errors) || []) => e
+      context.add_error e.message
+    rescue StandardError => e
+      raise e if policy.is_a? Paradocs::Schema # from the inner level, just reraise
+
+      if Paradocs.config.explicit_errors
+        error = ConfigurationError.new("<#{e.class}:#{e.message}> should be registered in the policy")
+        error.set_backtrace(e.backtrace)
+        raise error
       end
+      context.add_error policy.message unless Paradocs.config.explicit_errors
+      [value, false]
     end
 
     def has_default?
@@ -150,6 +150,7 @@ module Paradocs
       obj = key.is_a?(Symbol) ? Paradocs.registry.policies[key] : key
 
       raise ConfigurationError, "No policies defined for #{key.inspect}" unless obj
+
       obj.respond_to?(:new) ? obj.new(*args) : obj
     end
   end

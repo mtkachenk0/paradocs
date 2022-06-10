@@ -31,7 +31,7 @@ module Paradocs
       _results.errors
     end
 
-    # returns a shallow copy.
+    #  returns a shallow copy.
     def to_h
       _results.output.clone
     end
@@ -45,12 +45,14 @@ module Paradocs
     end
 
     private
+
     attr_reader :_graph, :_results
 
     module ClassMethods
       def new!(attrs = {}, environment = {})
         st = new(attrs, environment)
-        raise InvalidStructError.new(st) unless st.valid?
+        raise InvalidStructError, st unless st.valid?
+
         st
       end
 
@@ -70,7 +72,7 @@ module Paradocs
         end
       end
 
-      def paradocs_build_class_for_child(key, child_schema)
+      def paradocs_build_class_for_child(_key, child_schema)
         klass = Class.new do
           include Struct
         end
@@ -86,14 +88,14 @@ module Paradocs
         when Hash
           # find constructor for field
           cons = field.meta_data[:schema]
-          if cons.kind_of?(Paradocs::Schema)
+          if cons.is_a?(Paradocs::Schema)
             klass = paradocs_build_class_for_child(key, cons)
             klass.paradocs_after_define_schema(cons)
             cons = klass
           end
           cons ? cons.new(value) : value.freeze
         when Array
-          value.map{|v| wrap(key, v) }.freeze
+          value.map { |v| wrap(key, v) }.freeze
         else
           value.freeze
         end

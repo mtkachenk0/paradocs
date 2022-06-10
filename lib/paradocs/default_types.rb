@@ -1,44 +1,44 @@
-require "date"
+require 'date'
 
 module Paradocs
   # type coercions
   Paradocs.policy :integer do
-    coerce do |v, k, c|
+    coerce do |v, _k, _c|
       v.to_i
     end
 
     meta_data do
-      {type: :integer}
+      { type: :integer }
     end
   end
 
   Paradocs.policy :number do
-    coerce do |v, k, c|
+    coerce do |v, _k, _c|
       v.to_f
     end
 
     meta_data do
-      {type: :number}
+      { type: :number }
     end
   end
 
   Paradocs.policy :string do
-    coerce do |v, k, c|
+    coerce do |v, _k, _c|
       v.to_s
     end
 
     meta_data do
-      {type: :string}
+      { type: :string }
     end
   end
 
   Paradocs.policy :boolean do
-    coerce do |v, k, c|
+    coerce do |v, _k, _c|
       !!v
     end
 
     meta_data do
-      {type: :boolean}
+      { type: :boolean }
     end
   end
 
@@ -53,7 +53,7 @@ module Paradocs
     end
 
     meta_data do
-      {type: :array}
+      { type: :array }
     end
   end
 
@@ -65,21 +65,21 @@ module Paradocs
     validate do |value, key, payload|
       !payload.key?(key) ||
         value.respond_to?(:[]) &&
-        value.respond_to?(:key?)
+          value.respond_to?(:key?)
     end
 
     meta_data do
-      {type: :object}
+      { type: :object }
     end
   end
 
   Paradocs.policy :datetime do
-    coerce do |v, k, c|
+    coerce do |v, _k, _c|
       DateTime.parse(v.to_s)
     end
 
     meta_data do
-      {type: :datetime}
+      { type: :datetime }
     end
   end
 end
